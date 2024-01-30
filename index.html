@@ -1,0 +1,45 @@
+<head>
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <section id="controls">
+    <div>
+      Duration in seconds:
+      <input
+        id="duration"
+        type="number"
+        step="0.5"
+        value="5.0"
+        min="1.0"
+        max="15.0"
+      />
+    </div>
+    <button id="play-pause">Play</button>
+    <div>
+      Current Time:
+      <input
+        id="current-time"
+        type="number"
+        step="0.5"
+        value="0.0"
+        min="0.0"
+        max="15.0"
+      />
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.8.1/dist/ffmpeg.min.js"></script>
+
+
+  <video id="myVideo" controls="controls"></video>
+<video id="output-video" controls="controls"></video>
+
+<a id="dl" href="" download="download.mp4">download</a>
+
+<div id="message"></div>
+
+
+  <script src="framesManager.js"></script>
+  <script type='module' src="index.ts"></script>
+</body>
