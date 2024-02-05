@@ -1,45 +1,19 @@
-const Canvas2DRenderer = require("./renderers/canvas2dRenderer");
-const FramesManager = require("./framesManager");
-// import "./downloadVideo";
-
-// const { createCanvas } = require("canvas");
-
-console.log("jiii");
-
-// const durationInput = { value: 5 };
-// const currentTimeInput = { value: 0 };
-
-
 const { createCanvas, loadImage } = require('canvas');
 const { exec } = require('child_process');
-const https = require('https');
 const fs = require('fs');
+const { downloadVideo } = require('./utils');
 
 // Canvas setup
 const canvas = createCanvas(800, 600);
 const ctx = canvas.getContext('2d');
+
+return;
 
 const videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
 const outputVideoPath = 'output.mp4';
 const frameRate = 30; // Frames per second
 const numFrames = 300; // Number of frames in the video
 const receivedVideoPath = 'inputVideo.mp4';
-
-async function downloadVideo(url, dest) {
-  return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(dest);
-    const request = https.get(url, (response) => {
-      response.pipe(file);
-      file.on('finish', () => {
-        file.close(() => resolve());
-      });
-    });
-    request.on('error', (err) => {
-      fs.unlink(dest, () => reject(err));
-    });
-  });
-}
-
 
 // // Function to draw on the canvas
 // function drawFrame(frameNumber) {
@@ -63,7 +37,6 @@ async function downloadVideo(url, dest) {
 //   fs.writeFileSync(outputImagePath, imageBuffer);
 //   return outputImagePath;
 // }
-
 
 // Extract frames from video function
 async function extractFrames(inputVideo, outputPattern, numFrames) {
@@ -106,7 +79,6 @@ async function generateFrames() {
   // Download the video file
   await downloadVideo(videoUrl, receivedVideoPath);
 
-
   await extractFrames(receivedVideoPath, 'frame_%d.png', numFrames);
 
   // Render each frame and store the path
@@ -121,26 +93,25 @@ async function generateFrames() {
   }
 
   const pop = await new Promise((resolve) => {
-    var i = numFrames,
-      tid = setInterval(() => {
-        if (i++ > (numFrames + 20)) {
-          // draw 20 lines
-          clearInterval(tid);
-          resolve('pop');
-        }
-        ctx.beginPath();
-        ctx.strokeStyle = "green";
-        ctx.moveTo(Math.random() * 100, Math.random() * 100);
-        ctx.lineTo(Math.random() * 100, Math.random() * 100);
-        ctx.stroke();
+    let i = numFrames;
+    var tid = setInterval(() => {
+      if (i++ > (numFrames + 20)) {
+        // draw 20 lines
+        clearInterval(tid);
+        resolve('pop');
+      }
+      ctx.beginPath();
+      ctx.strokeStyle = 'green';
+      ctx.moveTo(Math.random() * 100, Math.random() * 100);
+      ctx.lineTo(Math.random() * 100, Math.random() * 100);
+      ctx.stroke();
 
-        const outputImagePath = `frame_${i}.png`;
-        const imageBuffer = canvas.toBuffer('image/png');
-        fs.writeFileSync(outputImagePath, imageBuffer);
+      const outputImagePath = `frame_${i}.png`;
+      const imageBuffer = canvas.toBuffer('image/png');
+      fs.writeFileSync(outputImagePath, imageBuffer);
 
-        framePaths.push(outputImagePath)
-
-      }, 200);
+      framePaths.push(outputImagePath);
+    }, 200);
   });
 
   // console.log('pop', pop)
@@ -158,7 +129,6 @@ async function generateVideo() {
 
   const ffmpegCommand = `ffmpeg -framerate ${frameRate} -i frame_%d.png -c:v libx264 -pix_fmt yuv420p ${outputVideoPath}`;
 
-
   exec(ffmpegCommand, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error: ${error.message}`);
@@ -166,14 +136,13 @@ async function generateVideo() {
     }
     // Optionally, clean up the individual frame images and downloaded video
     framePaths.forEach((framePath) => {
-      console.log('deleting', framePath)
+      console.log('deleting', framePath);
       fs.unlinkSync(framePath);
     });
 
-    console.log('deleting', receivedVideoPath)
+    console.log('deleting', receivedVideoPath);
     fs.unlinkSync(receivedVideoPath);
   });
-
 }
 
 // Generate the video
@@ -186,9 +155,6 @@ generateVideo();
 // arr.forEach((framePath) => {
 //   fs.unlinkSync(framePath);
 // });
-
-
-
 
 // const renderer = new Canvas2DRenderer({ canvas, layers: null });
 // const renderer = new WebGL2Renderer({ canvas });

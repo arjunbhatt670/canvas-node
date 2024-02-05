@@ -11,6 +11,13 @@
   "dependencies": {
     "@pixi/node": "^7.3.0",
     "canvas": "^2.11.2",
+    "eslint": "^8.56.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "gl": "^6.0.2",
+    "jsdom": "^24.0.0",
+    "pixi-shim": "^2.4.1",
+    "pixi.js-legacy": "^7.4.0",
+    "static-ffmpeg": "^3.2.1",
     "typescript": "^5.3.3"
   }
 }

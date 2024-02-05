@@ -1,2 +1,4 @@
 node_modules
 output.mp4
+intermediates
+inputVideo.mp4
