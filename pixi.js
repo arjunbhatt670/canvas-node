@@ -1,6 +1,7 @@
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
 const { PassThrough } = require('stream');
+const fs = require('fs');
 
 
 const { WebGLRenderingContext } = require('gl')
@@ -9,97 +10,96 @@ const { JSDOM } = require('jsdom');
 const Worker = require('worker_threads');
 
 global.Worker = Worker.Worker;
-// const document = new JSDOM().window.document;
-// global.document = document;
-// global.window = document.defaultView;
-// global.window.document = global.document;
-// global.WebGLRenderingContext = WebGLRenderingContext
-// global.CanvasRenderingContext2D = CanvasRenderingContext2D
+const document = new JSDOM().window.document;
+global.document = document;
+global.window = document.defaultView;
+global.window.document = global.document;
+global.WebGLRenderingContext = WebGLRenderingContext
+global.CanvasRenderingContext2D = CanvasRenderingContext2D
 global.ImageData = ImageData
-// global.Canvas = Canvas;
-// global.Image = Image;
+global.Canvas = Canvas;
+global.Image = Image;
 
 const PIXI = require('@pixi/node');
 
-const app = new PIXI.Application({
-    width: 1200,
-    height: 720,
-});
-var bunny, eggHead;
 
+async function generateVideo(secs) {
 
-async function loadAssets() {
-    const bunnyAsset = await PIXI.Assets.load('https://pixijs.com/assets/bunny.png');
-    const eggHeadAsset = await PIXI.Assets.load('https://pixijs.com/assets/eggHead.png');
+    console.log('Requested video time', secs, 'seconds');
 
-    bunny = PIXI.Sprite.from(bunnyAsset);
-    eggHead = PIXI.Sprite.from(eggHeadAsset);
-}
+    const frameRate = 30;
+    const frames = frameRate * secs;
 
-
-const pixi = async (frameNum) => {
-    console.log('starting', frameNum);
-
-
-    bunny.x = app.renderer.width / 2;
-    bunny.y = app.renderer.height / 2;
-
-    app.stage.addChild(bunny);
-
-
-
-    // const ctx = app.view.getContext('2d')
-
-    // ctx.fillStyle = 'red';
-    // ctx.fillRect(frameNum % app.renderer.width, 0, 50, 50);
-
-    bunny.rotation += 0.5;
-
-    eggHead.x = 30 + frameNum
-    eggHead.y = 30 + frameNum
-
-    app.stage.addChild(eggHead);
-
-    // app.renderer.render(app.stage);
-
-    return Buffer.from(app.renderer.extract
-        .canvas(app.stage)
-        .toDataURL().split(',')[1], 'base64')
-
-}
-
-async function generateVideo() {
-    await loadAssets();
+    console.log('Using frame rate', frameRate, 'fps')
 
     const command = ffmpeg();
     command.setFfmpegPath(ffmpegPath);
-    // command.inputOptions(['-f image2pipe', '-r 30', '-i pipe:0']);
     command.outputOptions([
         '-c:v libx264',     // Use H.264 codec
         '-preset veryfast', // Preset for fast encoding
         '-crf 23',          // Constant rate factor for video quality
-        '-r 30',            // Frame rate
+        `-r ${frameRate}`,            // Frame rate
+        `-t ${secs}`,
         '-pix_fmt yuv420p', // Pixel format
-        '-vf scale=1280:-2' // Scale width to 1280 pixels while preserving aspect ratio (change if needed)
+        // '-vf scale=1280:-2' // Scale width to 1280 pixels while preserving aspect ratio (change if needed)
     ]);
-
     const inputStream = new PassThrough();
+
+    const pixiStart = Date.now();
+
+    const app = new PIXI.Application({
+        width: 1200,
+        height: 720,
+        hello: true
+    });
     let frame = 0;
 
+
+    let oldRef;
+
+    const goXWise = async () => {
+        const rectangle = new PIXI.Graphics();
+        rectangle.beginFill(0xFF0000);
+        rectangle.drawRect(frame % app.renderer.width, 0, 50, 50);
+        rectangle.endFill();
+
+        if (oldRef) {
+            app.stage.removeChild(oldRef)
+        }
+        oldRef = rectangle;
+
+        app.stage.addChild(rectangle);
+
+        app.render()
+
+        const baseData = app.view
+            .toDataURL().replace('data:image/png;base64,', '')
+
+        return Buffer.from(baseData, 'base64')
+    }
+
+
     // Loop until there are no more frames to process
-    while (frame <= 100) {
-        const frameBuffer = await pixi(frame);
+    while (frame < frames) {
+        const frameBuffer = await goXWise();
         if (frameBuffer) {
+            // fs.writeFileSync(`intermediates/frame_${frame}.png`, frameBuffer)
             inputStream.write(frameBuffer)
         }
         frame++;
     }
+    const pixiEnd = Date.now();
+    console.log("pixi/node drawing time spent of all frames", pixiEnd - pixiStart)
+
+
     inputStream.end();
 
     command.input(inputStream);
+    let ffmpegStartTime;
 
     command.output('output.mp4')
         .on('start', () => {
+            ffmpegStartTime = Date.now();
             console.log('ffmpeg process started');
         })
         .on('error', (err, stdout, stderr) => {
@@ -108,6 +108,7 @@ async function generateVideo() {
         })
         .on('end', () => {
             console.log('Video encoding finished');
+            console.log('ffmpeg video conversion time spent', Date.now() - ffmpegStartTime)
         })
         .run();
 
@@ -116,8 +117,7 @@ async function generateVideo() {
 }
 
 // Call the async function to start generating the video
-generateVideo().catch(err => {
-    app.destroy()
+generateVideo(10).catch(err => {
     console.error('Error generating video:', err);
 });
 

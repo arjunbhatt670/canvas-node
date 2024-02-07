@@ -1,6 +1,10 @@
-#controls {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
+body {
+  font-family: sans-serif;
+}
+
+#canvas {
+  border: 1px solid;
+}
+video {
+  border: 1px solid;
 }
