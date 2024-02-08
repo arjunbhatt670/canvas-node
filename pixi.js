@@ -1,7 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
 const { PassThrough } = require('stream');
-const fs = require('fs');
 
 
 const { WebGLRenderingContext } = require('gl')
@@ -19,6 +18,7 @@ global.CanvasRenderingContext2D = CanvasRenderingContext2D
 global.ImageData = ImageData
 global.Canvas = Canvas;
 global.Image = Image;
+
 
 const PIXI = require('@pixi/node');
 
@@ -108,7 +108,10 @@ async function generateVideo(secs) {
         })
         .on('end', () => {
             console.log('Video encoding finished');
-            console.log('ffmpeg video conversion time spent', Date.now() - ffmpegStartTime)
+            console.log('ffmpeg video conversion time spent', Date.now() - ffmpegStartTime);
+            command.input('output.mp4').ffprobe(function (err, metadata) {
+                console.log('Duration of video', metadata.format.duration, 'seconds');
+            });
         })
         .run();
 
@@ -117,7 +120,7 @@ async function generateVideo(secs) {
 }
 
 // Call the async function to start generating the video
-generateVideo(10).catch(err => {
+generateVideo(3).catch(err => {
     console.error('Error generating video:', err);
 });
 
