@@ -1,47 +1,39 @@
-import "./index.css";
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 
 /**
  * @type {HTMLCanvasElement}
  */
 const canvas = document.getElementById("canvas");
-canvas.width = 500;
-canvas.height = 400;
+canvas.width = 1200;
+canvas.height = 720;
 
-recordButton.onclick = async () => {
-    const blob = await recordCanvas(100, 30);
+document.querySelector('#recordButton').onclick = async () => {
+    const { blob, createdFramesCount } = await recordCanvas(10, 30);
+    console.log('createdFramesCount', createdFramesCount)
     myVideo.src = URL.createObjectURL(blob);
 };
 
-recordButtonPuppeteer.onclick = () => {
-    document.recordForPuppeteer = recordForPuppeteer;
-};
+const frameCaptureForPuppeteer = captureFramesFromCanvas;
 
-frameCaptureButtonPuppeteer.onclick = () => {
-    document.frameCaptureForPuppeteer = captureFramesFromCanvas;
-};
-
-screencastButtonPuppeteer.onclick = () => {
-    document.getCanvasPosition = () => {
-        const rect = canvas.getBoundingClientRect();
-        return {
-            width: rect.width,
-            height: rect.height,
-            x: rect.x,
-            y: rect.y
-        }
-
+function getCanvasPosition() {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
     }
 
-    document.startDrawing = startDrawing
 }
 
 async function recordForPuppeteer(time, frameRate) {
-    const blob = await recordCanvas(time, frameRate);
-    return await getDataURL(blob);
+    const { blob, createdFramesCount } = await recordCanvas(time, frameRate);
+    return { dataURL: await getDataURL(blob), createdFramesCount };
 }
 
 function getDataURL(blob) {
-    return new Promise(async (res, rej) => {
+    return new Promise((res, rej) => {
         const reader = new FileReader();
         reader.readAsDataURL(blob);
         reader.onload = () => res(reader.result);
@@ -49,17 +41,17 @@ function getDataURL(blob) {
     });
 }
 
-function startDrawing(time) {
+async function startDrawing(time) {
 
 
     let cx = canvas.getContext("2d");
 
-    return new Promise((res) => {
-        let frame = 0;
-        const startTime = Date.now();
+    let frame = 0;
+    const startTime = Date.now();
 
+    await new Promise((res) => {
         const goXWise = () => {
-            if (Date.now() - startTime > time) {
+            if (Date.now() - startTime > (time * 200)) {
                 res();
                 return;
             }
@@ -69,10 +61,42 @@ function startDrawing(time) {
             frame++;
 
             requestAnimationFrame(goXWise);
+
         };
 
         goXWise();
+    })
+
+
+    await new Promise((res) => {
+        const video = document.createElement('video');
+        video.src = 'inputVideo.mp4';
+        video.play();
+
+
+        video.addEventListener("play", () => {
+            function step() {
+                if (Date.now() - startTime > (time * 1000) + 200) {
+                    video.pause();
+                    res();
+                    return;
+                }
+                cx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                frame++;
+                requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        })
+
+        video.addEventListener('ended', () => {
+            video.pause();
+            res()
+        })
     });
+
+
+    return frame
+
 }
 
 function startDrawingFrameWise(time, frameRate = 30) {
@@ -103,16 +127,16 @@ function startDrawingFrameWise(time, frameRate = 30) {
 
         // await new Promise((res) => {
         //     video.addEventListener("play", () => {
-        //         function step() {
-        //             console.log('frame', frame)
+        //         async function step() {
         //             if (frame >= frames) {
+        //                 video.pause();
         //                 video.remove()
         //                 res()
         //                 return;
         //             }
-        //             cx.drawImage(video, canvas.width - 100, canvas.height - 100, 100, 100);
+        //             cx.drawImage(video, 0, 0, canvas.width, canvas.height);
         //             frame++;
-        //             canvas.toBlob((blob) => data.push(blob))
+        //             data.push(await new Promise((res) => canvas.toBlob((blob) => res(blob))));
         //             requestAnimationFrame(step);
         //         }
         //         requestAnimationFrame(step);
@@ -126,6 +150,7 @@ function startDrawingFrameWise(time, frameRate = 30) {
 function recordCanvas(time, frameRate = 30) {
     return new Promise(async (res) => {
         const recordedChunks = [];
+        let createdFramesCount;
 
         const stream = canvas.captureStream(frameRate);
 
@@ -138,11 +163,11 @@ function recordCanvas(time, frameRate = 30) {
             var blob = new Blob(recordedChunks, {
                 type: "video/webm",
             });
-            res(blob);
+            res({ blob, createdFramesCount });
         };
 
         mediaRecorder.start(1000);
-        await startDrawing(time);
+        createdFramesCount = await startDrawing(time);
         mediaRecorder.stop();
     });
 }

@@ -7,6 +7,7 @@ const { WebGLRenderingContext } = require('gl')
 const { Canvas, Image, CanvasRenderingContext2D, ImageData } = require('canvas');
 const { JSDOM } = require('jsdom');
 const Worker = require('worker_threads');
+require('pixi-shim')
 
 global.Worker = Worker.Worker;
 const document = new JSDOM().window.document;
@@ -88,8 +89,35 @@ async function generateVideo(secs) {
         }
         frame++;
     }
+
+    // const vidRes = new PIXI.VideoResource('https://pixijs.com/assets/video.mp4');
+
+    // const videoTexture = await PIXI.Texture.from('./inputVideo.mp4', {
+    //     resourceOptions: {
+    //         autoLoad: false
+    //     }
+    // });
+    // const videoSprite = new PIXI.Sprite(videoTexture);
+    // app.stage.addChild(videoSprite);
+    // const videoController = videoSprite.texture.baseTexture.getDrawableSource();
+    // videoController.play()
+
+
+    // while (frame < frames) {
+    //     const frameBuffer = Buffer.from(await app.renderer.extract.base64(), 'base64')
+    //     if (frameBuffer) {
+    //         // fs.writeFileSync(`intermediates/frame_${frame}.png`, frameBuffer)
+    //         inputStream.write(frameBuffer)
+    //     }
+    //     frame++;
+    // }
+
+
+
+
+
     const pixiEnd = Date.now();
-    console.log("pixi/node drawing time spent of all frames", pixiEnd - pixiStart)
+    console.log("pixi/node drawing time spent of all frames", pixiEnd - pixiStart, 'ms')
 
 
     inputStream.end();
@@ -108,7 +136,7 @@ async function generateVideo(secs) {
         })
         .on('end', () => {
             console.log('Video encoding finished');
-            console.log('ffmpeg video conversion time spent', Date.now() - ffmpegStartTime);
+            console.log('ffmpeg video conversion time spent', Date.now() - ffmpegStartTime, 'ms');
             command.input('output.mp4').ffprobe(function (err, metadata) {
                 console.log('Duration of video', metadata.format.duration, 'seconds');
             });
@@ -116,11 +144,11 @@ async function generateVideo(secs) {
         .run();
 
     app.destroy();
-    console.log(`Processed ${frame} frames.`);
+    console.log('Processed', frame, 'frames.');
 }
 
 // Call the async function to start generating the video
-generateVideo(3).catch(err => {
+generateVideo(30).catch(err => {
     console.error('Error generating video:', err);
 });
 

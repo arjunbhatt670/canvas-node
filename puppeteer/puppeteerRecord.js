@@ -2,9 +2,12 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static')
 const { PassThrough } = require('stream');
 const puppeteer = require('puppeteer');
+const fs = require('fs')
 
 const frameCapture = async () => {
     console.log('starting');
+    const time = 30;
+    const frameRate = 30;
 
     const browser = await puppeteer.launch({
         dumpio: true
@@ -13,43 +16,54 @@ const frameCapture = async () => {
 
     await page.goto('http://localhost:5173/');
 
-
+    await page.setViewport({
+        width: 1200,
+        height: 720,
+    })
 
     const crop = await page.evaluate(async function () {
-        return getCanvasPosition(11, 30);
+        return this.getCanvasPosition();
     });
+
+    const startTime = Date.now();
 
     const recorder = await page.screencast({
         path: 'recording.webm', ffmpegPath, crop
+
     });
 
-    await page.evaluate(async function () {
-        return await startDrawing(5);
+    const frames = await page.evaluate(async function () {
+        return await this.startDrawing(30.5);
     });
+
+    console.log('frames', frames)
 
     await recorder.stop();
 
-
-
-
-
-    const inputStream = new PassThrough();
-
-    inputStream.end();
+    console.log("Screencast data extract time spent - ", Date.now() - startTime, 'ms')
 
     const command = ffmpeg();
     command.setFfmpegPath(ffmpegPath);
+    let ffmpegStartTime;
 
     await new Promise((res, rej) => command.input('recording.webm')
         .output('output.mp4')
+        .fpsOutput(frameRate)
+        .setDuration(time)
+        .on('start', () => {
+            ffmpegStartTime = Date.now();
+        })
         .on('end', (args) => {
-            console.log('video generated');
+            console.log('Ffmpeg Screencast data to video conversion time spent: ', Date.now() - ffmpegStartTime, 'ms');
             res(args);
         })
         .on('error', (error) => {
             rej(error)
         })
         .run());
+
+
+    fs.unlinkSync('recording.webm');
 
 
     command.input('output.mp4').ffprobe(function (err, metadata) {

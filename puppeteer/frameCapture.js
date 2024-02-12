@@ -13,9 +13,8 @@ const frameCapture = async () => {
 
     await page.goto('http://localhost:5173/');
 
-    await page.click('#frameCaptureButtonPuppeteer');
     const dataURLs = await page.evaluate(async function () {
-        return await document.frameCaptureForPuppeteer(10, 30);
+        return await frameCaptureForPuppeteer(10, 30);
     });
 
     const inputStream = new PassThrough();
@@ -33,8 +32,8 @@ const frameCapture = async () => {
         '-c:v libx264',     // Use H.264 codec
         '-preset veryfast', // Preset for fast encoding
         '-crf 23',          // Constant rate factor for video quality
-        `-r ${30}`,            // Frame rate
-        `-t ${10}`,
+        `-r ${30}`,         // Frame rate
+        `-t ${10}`,         // video time
         '-pix_fmt yuv420p', // Pixel format
         // '-vf scale=1280:-2' // Scale width to 1280 pixels while preserving aspect ratio (change if needed)
     ]).input(inputStream)
