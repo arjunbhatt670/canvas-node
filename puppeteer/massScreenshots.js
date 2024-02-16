@@ -1,20 +1,18 @@
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static')
-const puppeteer = require('puppeteer');
+const Puppeteer = require(".");
 const { PuppeteerMassScreenshots } = require('../utils');
 
 const frameCapture = async () => {
     console.log('starting');
-    const time = 30;
-    const frameRate = 30;
+    const time = 10;
+    const frameRate = 100;
 
     console.log('Requested video time', time, 'seconds');
     console.log('Using frame rate', frameRate, 'fps');
 
-    const browser = await puppeteer.launch({
-        dumpio: true,
-    });
-    const page = await browser.newPage();
+    const puppeteer = new Puppeteer();
+    const page = await puppeteer.init();
 
     await page.goto('http://localhost:5173/');
 
@@ -29,9 +27,9 @@ const frameCapture = async () => {
     const startTime = Date.now();
 
     await recorder.start();
-    const frames = await page.evaluate(async function () {
-        return await this.startDrawing(30);
-    })
+    const frames = await page.evaluate(async function (time) {
+        return await this.startDrawing(time);
+    }, time)
     await recorder.stop();
 
     console.log('Processed', frames, 'frames.');
@@ -68,7 +66,7 @@ const frameCapture = async () => {
     });
 
 
-    await browser.close()
+    await puppeteer.exit()
 }
 
 

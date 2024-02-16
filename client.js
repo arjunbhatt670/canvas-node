@@ -8,6 +8,11 @@ const canvas = document.getElementById("canvas");
 canvas.width = 1200;
 canvas.height = 720;
 
+/** @type {HTMLVideoElement} */
+let video;
+/** @type {CanvasRenderingContext2D} */
+let cx;
+
 document.querySelector("#recordButton").onclick = async () => {
     const { blob, createdFramesCount } = await recordCanvas(10, 30);
     console.log("createdFramesCount", createdFramesCount);
@@ -68,7 +73,7 @@ async function startDrawing(time, isFramesRequest) {
 
     await new Promise((res) => {
         const video = document.createElement("video");
-        video.src = "inputVideo.mp4";
+        video.src = "./assets/inputVideo.mp4";
         video.play();
 
         video.addEventListener("canplaythrough", () => {
@@ -78,7 +83,9 @@ async function startDrawing(time, isFramesRequest) {
                     res();
                     return;
                 }
-                cx.drawImage(video, 0, 0, canvas.width / 2, canvas.height / 2);
+                cx.drawImage(video, 0, 0, 416, 240);
+                cx.fillStyle = "red";
+                cx.fillRect(frame % canvas.width, 290, 50, 50);
                 frame++;
 
                 if (isFramesRequest) {
@@ -101,6 +108,30 @@ async function startDrawing(time, isFramesRequest) {
     }
 
     return frame;
+}
+
+/** @param {HTMLVideoElement}  video */
+const updateVideoCurrentTime = (video, newTime) => {
+    video.currentTime = newTime;
+    return new Promise((res) => {
+        video.addEventListener('seeked', function seek() {
+            res();
+            video.removeEventListener(seek);
+        });
+    });
+};
+
+
+async function captureFrameNumber(frameNumber, frameRate) {
+    const timeFrame = frameNumber / frameRate;
+
+    await updateVideoCurrentTime(video, timeFrame);
+
+    cx.drawImage(video, 0, 0)
+
+    cx.fillStyle = "red";
+    cx.fillRect(frameNumber % canvas.width, 290, 50, 50);
+
 }
 
 // function startDrawingFrameWise(time, frameRate = 30) {
@@ -180,16 +211,25 @@ function recordCanvas(time, frameRate = 30) {
 
 async function captureFramesFromCanvas(time) {
     const dataUrls = await startDrawing(time, true);
-    // const formData = new FormData();
-    // formData.append('sample', new Blob(dataUrls));
-    // formData.append('source', 'client');
-    // await fetch('http://localhost:3000/save?a=1', {
-    //     method: 'POST',
-    //     body: formData,
-    //     headers: {
-    //         'Access-Control-Allow-Origin': '*',
-    //         // 'Content-type': 'application/json'
-    //     },
-    // })
-    return dataUrls
+    const formData = new FormData();
+    formData.append('sample', new Blob(dataUrls));
+    formData.append('source', 'client');
+    await fetch('http://localhost:3000/save?a=1', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            // 'Content-type': 'application/json'
+        },
+    })
+    // return dataUrls
+}
+
+
+function initCanvas() {
+    cx = canvas.getContext("2d");
+    video = document.createElement("video");
+    video.src = "./assets/inputVideo.asf";
+    video.width = 416
+    video.height = 240
 }

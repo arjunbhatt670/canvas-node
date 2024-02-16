@@ -97,8 +97,27 @@ class PuppeteerMassScreenshots {
 }
 
 
+const asyncIterable = (times) => ({
+  [Symbol.asyncIterator]() {
+    let i = 0;
+    return {
+      next() {
+        const done = i === times;
+        const value = done ? undefined : i++;
+        return Promise.resolve({ value, done });
+      },
+      return() {
+        // This will be reached if the consumer called 'break' or 'return' early in the loop.
+        return { done: true };
+      },
+    };
+  },
+});
+
+
 module.exports = {
   downloadVideo,
   getFilesCountIn,
-  PuppeteerMassScreenshots
+  PuppeteerMassScreenshots,
+  asyncIterable
 }

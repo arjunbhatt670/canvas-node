@@ -1,7 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static')
-const { PassThrough } = require('stream');
-const puppeteer = require('puppeteer');
+const Puppeteer = require(".");
 const fs = require('fs')
 
 const frameCapture = async () => {
@@ -9,10 +8,8 @@ const frameCapture = async () => {
     const time = 30;
     const frameRate = 30;
 
-    const browser = await puppeteer.launch({
-        dumpio: true
-    });
-    const page = await browser.newPage();
+    const puppeteer = new Puppeteer();
+    const page = await puppeteer.init();
 
     await page.goto('http://localhost:5173/');
 
@@ -71,7 +68,7 @@ const frameCapture = async () => {
     });
 
 
-    await browser.close()
+    await puppeteer.exit()
     console.log("end");
 }
 

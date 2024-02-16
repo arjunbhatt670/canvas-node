@@ -2,11 +2,13 @@ const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const { PassThrough } = require("stream");
 const Puppeteer = require(".");
+const { asyncIterable } = require("../utils");
 
 const frameCapture = async () => {
     console.log("starting");
-    const time = 10;
-    const frameRate = 60;
+    const time = 5;
+    const frameRate = 30;
+    const totalFrames = time * frameRate
 
     console.log("Requested video time", time, "seconds");
     console.log("Using frame rate", frameRate, "fps");
@@ -17,25 +19,38 @@ const frameCapture = async () => {
 
     await page.goto("http://localhost:5173/");
 
-
-    const dataURLs = await page.evaluate(
-        async function (time) {
-            return await this.captureFramesFromCanvas(time);
-        },
-        time
-    );
-
     const inputStream = new PassThrough();
-    dataURLs.forEach((dataURL) => {
-        inputStream.write(
-            Buffer.from(dataURL.replace("data:image/png;base64,", ""), "base64")
+
+    await page.evaluate(() => this.initCanvas())
+
+    const startTime = Date.now()
+    for await (const frameNum of asyncIterable(totalFrames)) {
+        await page.evaluate(
+            function (arg1, arg2) {
+                return this.captureFrameNumber(arg1, arg2);
+            },
+            frameNum + 1, frameRate
         );
-    });
+
+        console.log('frameNum', frameNum)
+
+
+        const canvas = await page.$("canvas");
+        const url = await page.evaluate((canvas) => canvas.toDataURL(), canvas);
+        inputStream.write(
+            Buffer.from(url.replace("data:image/png;base64,", ""), "base64")
+        );
+    }
+
+
+    console.log('Processed', totalFrames, 'frames.');
+    console.log("Frames extraction time spent - ", Date.now() - startTime, 'ms')
 
     inputStream.end();
 
     const command = ffmpeg();
     command.setFfmpegPath(ffmpegPath);
+    let ffmpegStartTime;
 
     await new Promise((res, rej) =>
         command
@@ -44,8 +59,11 @@ const frameCapture = async () => {
             .output("output.mp4")
             .fpsOutput(frameRate)
             .setDuration(time)
+            .on('start', () => {
+                ffmpegStartTime = Date.now();
+            })
             .on("end", (args) => {
-                console.log("video generated");
+                console.log('Ffmpeg frames to video conversion time spent: ', Date.now() - ffmpegStartTime, 'ms');
                 res(args);
             })
             .on("error", (error) => {
