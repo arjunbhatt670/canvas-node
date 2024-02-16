@@ -8,13 +8,11 @@ const canvas = document.getElementById("canvas");
 canvas.width = 1200;
 canvas.height = 720;
 
-document.querySelector('#recordButton').onclick = async () => {
+document.querySelector("#recordButton").onclick = async () => {
     const { blob, createdFramesCount } = await recordCanvas(10, 30);
-    console.log('createdFramesCount', createdFramesCount)
+    console.log("createdFramesCount", createdFramesCount);
     myVideo.src = URL.createObjectURL(blob);
 };
-
-const frameCaptureForPuppeteer = captureFramesFromCanvas;
 
 function getCanvasPosition() {
     const rect = canvas.getBoundingClientRect();
@@ -22,9 +20,8 @@ function getCanvasPosition() {
         width: rect.width,
         height: rect.height,
         x: rect.x,
-        y: rect.y
-    }
-
+        y: rect.y,
+    };
 }
 
 async function recordForPuppeteer(time, frameRate) {
@@ -41,17 +38,16 @@ function getDataURL(blob) {
     });
 }
 
-async function startDrawing(time) {
-
-
+async function startDrawing(time, isFramesRequest) {
     let cx = canvas.getContext("2d");
 
     let frame = 0;
+    const frameData = [];
     const startTime = Date.now();
 
     await new Promise((res) => {
         const goXWise = () => {
-            if (Date.now() - startTime > (time * 200)) {
+            if (Date.now() - startTime > time * 200) {
                 res();
                 return;
             }
@@ -60,95 +56,103 @@ async function startDrawing(time) {
             cx.fillRect(frame % canvas.width, 0, 50, 50);
             frame++;
 
-            requestAnimationFrame(goXWise);
+            if (isFramesRequest) {
+                frameData.push(canvas.toDataURL("base64"));
+            }
 
+            requestAnimationFrame(goXWise);
         };
 
         goXWise();
-    })
-
+    });
 
     await new Promise((res) => {
-        const video = document.createElement('video');
-        video.src = 'inputVideo.mp4';
+        const video = document.createElement("video");
+        video.src = "inputVideo.mp4";
         video.play();
 
-
-        video.addEventListener("play", () => {
+        video.addEventListener("canplaythrough", () => {
             function step() {
-                if (Date.now() - startTime > (time * 1000) + 200) {
+                if (Date.now() - startTime > time * 1000 + 200) {
                     video.pause();
                     res();
                     return;
                 }
-                cx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                cx.drawImage(video, 0, 0, canvas.width / 2, canvas.height / 2);
                 frame++;
+
+                if (isFramesRequest) {
+                    frameData.push(canvas.toDataURL("base64", 100));
+                }
+
                 requestAnimationFrame(step);
             }
-            requestAnimationFrame(step);
-        })
+            step();
+        });
 
-        video.addEventListener('ended', () => {
+        video.addEventListener("ended", () => {
             video.pause();
-            res()
-        })
+            res();
+        });
     });
 
+    if (isFramesRequest) {
+        return frameData;
+    }
 
-    return frame
-
+    return frame;
 }
 
-function startDrawingFrameWise(time, frameRate = 30) {
-    const cx = canvas.getContext("2d");
-    const frames = time * frameRate;
+// function startDrawingFrameWise(time, frameRate = 30) {
+//     const cx = canvas.getContext("2d");
+//     const frames = time * frameRate;
 
-    return new Promise(async (res) => {
-        let frame = 0;
-        const data = []
+//     return new Promise(async (res) => {
+//         let frame = 0;
+//         const data = [];
 
-        const goXWise = () => {
-            cx.clearRect(0, 0, canvas.width, canvas.height);
-            cx.fillStyle = "red";
-            cx.fillRect(frame % canvas.width, 0, 50, 50);
-        };
+//         const goXWise = () => {
+//             cx.clearRect(0, 0, canvas.width, canvas.height);
+//             cx.fillStyle = "red";
+//             cx.fillRect(frame % canvas.width, 0, 50, 50);
+//         };
 
-        while (frame < frames) {
-            goXWise();
-            frame++;
-            /** @type {Blob} */
-            const blob = await new Promise((res) => canvas.toBlob((blob) => res(blob)));
-            data.push(blob);
-        }
+//         while (frame < frames) {
+//             goXWise();
+//             frame++;
+//             /** @type {Blob} */
+//             const blob = await new Promise((res) => canvas.toBlob((blob) => res(blob)));
+//             data.push(blob);
+//         }
 
-        // const video = document.createElement('video');
-        // video.src = 'inputVideo.mp4';
-        // video.play();
+//         // const video = document.createElement('video');
+//         // video.src = 'inputVideo.mp4';
+//         // video.play();
 
-        // await new Promise((res) => {
-        //     video.addEventListener("play", () => {
-        //         async function step() {
-        //             if (frame >= frames) {
-        //                 video.pause();
-        //                 video.remove()
-        //                 res()
-        //                 return;
-        //             }
-        //             cx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        //             frame++;
-        //             data.push(await new Promise((res) => canvas.toBlob((blob) => res(blob))));
-        //             requestAnimationFrame(step);
-        //         }
-        //         requestAnimationFrame(step);
-        //     })
-        // });
+//         // await new Promise((res) => {
+//         //     video.addEventListener("play", () => {
+//         //         async function step() {
+//         //             if (frame >= frames) {
+//         //                 video.pause();
+//         //                 video.remove()
+//         //                 res()
+//         //                 return;
+//         //             }
+//         //             cx.drawImage(video, 0, 0, canvas.width, canvas.height);
+//         //             frame++;
+//         //             data.push(await new Promise((res) => canvas.toBlob((blob) => res(blob))));
+//         //             requestAnimationFrame(step);
+//         //         }
+//         //         requestAnimationFrame(step);
+//         //     })
+//         // });
 
-        res(data);
-    });
-}
+//         res(data);
+//     });
+// }
 
 function recordCanvas(time, frameRate = 30) {
-    return new Promise(async (res) => {
+    return new Promise((res) => {
         const recordedChunks = [];
         let createdFramesCount;
 
@@ -167,17 +171,25 @@ function recordCanvas(time, frameRate = 30) {
         };
 
         mediaRecorder.start(1000);
-        createdFramesCount = await startDrawing(time);
-        mediaRecorder.stop();
+        startDrawing(time).then((framesCount) => {
+            createdFramesCount = framesCount;
+            mediaRecorder.stop();
+        });
     });
 }
 
-async function captureFramesFromCanvas(time, frameRate) {
-    /** @type {Blob[]} */
-    const blobs = await startDrawingFrameWise(time, frameRate);
-
-    const dataUrls = await Promise.all(blobs.map((blob) => getDataURL(blob)));
-
-    return dataUrls;
-
+async function captureFramesFromCanvas(time) {
+    const dataUrls = await startDrawing(time, true);
+    // const formData = new FormData();
+    // formData.append('sample', new Blob(dataUrls));
+    // formData.append('source', 'client');
+    // await fetch('http://localhost:3000/save?a=1', {
+    //     method: 'POST',
+    //     body: formData,
+    //     headers: {
+    //         'Access-Control-Allow-Origin': '*',
+    //         // 'Content-type': 'application/json'
+    //     },
+    // })
+    return dataUrls
 }

@@ -5,24 +5,29 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ARJUN=arjun node puppeteer/frameCapture.js"
+    "start": "ARJUN=arjun node puppeteer/frameCapture.js",
+    "devStart": "nodemon server/app.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@pixi/node": "^7.3.0",
     "canvas": "^2.11.2",
-    "eslint": "^8.56.0",
     "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.2",
     "gl": "^6.0.2",
     "jsdom": "^24.0.0",
+    "multer": "^1.4.5-lts.1",
     "pixi-shim": "^2.4.1",
     "pixi.js-legacy": "^7.4.0",
-    "puppeteer": "^22.0.0",
-    "typescript": "^5.3.3"
+    "puppeteer": "^22.0.0"
   },
   "devDependencies": {
+    "body-parser": "^1.20.2",
+    "eslint": "^8.56.0",
+    "express": "^4.18.2",
+    "nodemon": "^3.0.3",
+    "typescript": "^5.3.3",
     "vite": "^5.0.12"
   }
 }
