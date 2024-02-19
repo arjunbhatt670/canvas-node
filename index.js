@@ -7,7 +7,6 @@ const { downloadVideo } = require('./utils');
 const canvas = createCanvas(800, 600);
 const ctx = canvas.getContext('2d');
 
-return;
 
 const videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
 const outputVideoPath = 'output.mp4';
@@ -92,7 +91,7 @@ async function generateFrames() {
     // framePaths.push(framePath);
   }
 
-  const pop = await new Promise((resolve) => {
+  await new Promise((resolve) => {
     let i = numFrames;
     var tid = setInterval(() => {
       if (i++ > (numFrames + 20)) {

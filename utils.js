@@ -114,6 +114,65 @@ const asyncIterable = (times) => ({
   },
 });
 
+Function.prototype.myCall = function (obj, ...args) {
+  const sym = Symbol();
+  obj[sym] = this;
+  obj[sym](...args);
+  delete obj[sym];
+}
+
+Function.prototype.myApply = function (obj, args) {
+  const sym = Symbol();
+  obj[sym] = this;
+  obj[sym](...args);
+  delete obj[sym]
+}
+
+Function.prototype.myBind = function (obj, ...args) {
+  const sym = Symbol();
+  obj[sym] = this;
+  return (...inArgs) => {
+    obj[sym](...args, ...inArgs);
+    delete obj[sym]
+  };
+}
+
+
+// function calleeFunction(arg1, arg2) {
+//   console.log(this.fname, 'has these arguments', arg1, arg2);
+// }
+
+Array.prototype.myMap = function (callback) {
+  return this.reduce((acc, currentValue, index) => {
+    acc.push(callback(currentValue, index));
+    return acc;
+  }, [])
+}
+
+Array.prototype.myReduceM = function (callback, initialValue) {
+  let acc = initialValue;
+  this.map((value, index) => {
+    acc = callback(acc, value, index);
+  });
+  return acc;
+}
+
+Array.prototype.myReduceF = function (callback, initialValue) {
+  let acc = initialValue;
+  this.forEach((value, index) => {
+    acc = callback(acc, value, index);
+  });
+  return acc;
+}
+
+Array.prototype.myForEach = function (callback) {
+  this.map((value, index) => {
+    callback(value, index);
+  })
+}
+
+
+
 
 module.exports = {
   downloadVideo,

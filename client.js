@@ -229,7 +229,7 @@ async function captureFramesFromCanvas(time) {
 function initCanvas() {
     cx = canvas.getContext("2d");
     video = document.createElement("video");
-    video.src = "./assets/inputVideo.asf";
+    video.src = "./assets/inputVideo.mp4";
     video.width = 416
     video.height = 240
 }

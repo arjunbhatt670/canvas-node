@@ -4,10 +4,11 @@ const { PassThrough } = require('stream');
 
 
 const { WebGLRenderingContext } = require('gl')
-const { Canvas, Image, CanvasRenderingContext2D, ImageData } = require('canvas');
+const { Canvas, Image, CanvasRenderingContext2D, ImageData, loadImage } = require('canvas');
 const { JSDOM } = require('jsdom');
 const Worker = require('worker_threads');
-require('pixi-shim')
+require('pixi-shim');
+const { Writable } = require('node:stream');
 
 global.Worker = Worker.Worker;
 const document = new JSDOM().window.document;
@@ -20,18 +21,47 @@ global.ImageData = ImageData
 global.Canvas = Canvas;
 global.Image = Image;
 
+const ffmpegCommand = ffmpeg();
+ffmpegCommand.setFfmpegPath(ffmpegPath);
+
 
 const PIXI = require('@pixi/node');
 
 
-async function generateVideo(secs) {
+async function extractFrames(inputVideoPath, outputPattern, frameCount) {
 
-    console.log('Requested video time', secs, 'seconds');
+    return new Promise((resolve) => {
+        ffmpegCommand
+            .input(inputVideoPath)
+            .frames(frameCount)
+            .output(outputPattern)
+            .on('start', () => {
+                console.log(extractFrames.name, 'started');
+            }).on('end', () => {
+                console.log(extractFrames.name, 'completed');
+                resolve();
+            }).on('error', (err, stderr, stdout) => {
+                console.error('ffmpeg error:', err.message, stderr, stdout);
+            }).run()
+    });
+
+}
+
+
+async function generateVideo(secs) {
 
     const frameRate = 30;
     const frames = frameRate * secs;
 
-    console.log('Using frame rate', frameRate, 'fps')
+    console.log('Requested video time', secs, 'seconds');
+    console.log('Using frame rate', frameRate, 'fps');
+
+    await PIXI.Assets.init({
+        basePath: 'intermediates'
+    })
+
+
+    // await extractFrames('./inputVideo.mp4', 'intermediates/frame_%d.png', 15 * 30);
 
     const command = ffmpeg();
     command.setFfmpegPath(ffmpegPath);
@@ -53,7 +83,7 @@ async function generateVideo(secs) {
         height: 720,
         hello: true
     });
-    let frame = 0;
+    let frame = 1;
 
 
     let oldRef;
@@ -63,6 +93,14 @@ async function generateVideo(secs) {
         rectangle.beginFill(0xFF0000);
         rectangle.drawRect(frame % app.renderer.width, 0, 50, 50);
         rectangle.endFill();
+
+
+        // const videoFrame = await loadImage(`intermediates/frame_${frame}.png`); // Use the input video file directly
+
+        if (frame <= 360) {
+            const img = await PIXI.Assets.load(`frame_${frame}.png`);
+            app.stage.addChild(PIXI.Sprite.from(img));
+        }
 
         if (oldRef) {
             app.stage.removeChild(oldRef)
@@ -81,7 +119,7 @@ async function generateVideo(secs) {
 
 
     // Loop until there are no more frames to process
-    while (frame < frames) {
+    while (frame <= frames) {
         const frameBuffer = await goXWise();
         if (frameBuffer) {
             // fs.writeFileSync(`intermediates/frame_${frame}.png`, frameBuffer)
@@ -89,31 +127,6 @@ async function generateVideo(secs) {
         }
         frame++;
     }
-
-    // const vidRes = new PIXI.VideoResource('https://pixijs.com/assets/video.mp4');
-
-    // const videoTexture = await PIXI.Texture.from('./inputVideo.mp4', {
-    //     resourceOptions: {
-    //         autoLoad: false
-    //     }
-    // });
-    // const videoSprite = new PIXI.Sprite(videoTexture);
-    // app.stage.addChild(videoSprite);
-    // const videoController = videoSprite.texture.baseTexture.getDrawableSource();
-    // videoController.play()
-
-
-    // while (frame < frames) {
-    //     const frameBuffer = Buffer.from(await app.renderer.extract.base64(), 'base64')
-    //     if (frameBuffer) {
-    //         // fs.writeFileSync(`intermediates/frame_${frame}.png`, frameBuffer)
-    //         inputStream.write(frameBuffer)
-    //     }
-    //     frame++;
-    // }
-
-
-
 
 
     const pixiEnd = Date.now();
@@ -148,8 +161,12 @@ async function generateVideo(secs) {
 }
 
 // Call the async function to start generating the video
-generateVideo(30).catch(err => {
-    console.error('Error generating video:', err);
-});
+// generateVideo(30).catch(err => {
+//     console.error('Error generating video:', err);
+// });
+
+(async () => {
+    await generateVideo(20);
+})();
 
 

@@ -38,3 +38,8 @@ COPY . .
 # Start the server
 EXPOSE 3000
 CMD xvfb-run node ./pixi.js
+
+
+
+# docker run command
+# docker rm hope-linux && docker image rm pixi:1  &&  docker build -t pixi:1 . && docker run -d --name hope-linux pixi:1
