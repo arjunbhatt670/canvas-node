@@ -1,6 +1,7 @@
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
 const { PassThrough } = require('stream');
+const { exec } = require('child_process');
 
 
 const { WebGLRenderingContext } = require('gl')
@@ -9,6 +10,7 @@ const { JSDOM } = require('jsdom');
 const Worker = require('worker_threads');
 require('pixi-shim');
 const { Writable } = require('node:stream');
+const tmp = require("tmp")
 
 global.Worker = Worker.Worker;
 const document = new JSDOM().window.document;
@@ -26,23 +28,59 @@ ffmpegCommand.setFfmpegPath(ffmpegPath);
 
 
 const PIXI = require('@pixi/node');
+const fs = require('fs');
 
 
-async function extractFrames(inputVideoPath, outputPattern, frameCount) {
+// convert stereo to mono
+//ffmpeg -i stereo.flac -ac 1 mono.flac
+
+//join 2 audio
+///  ffmpeg -i mono.mp3 -i stereo.mp3  -filter_complex "[0:a][1:a]concat=n=2:v=0:a=1" output.mp3
+
+// mix two audios
+// ffmpeg -i stereo.mp3 -i mono.mp3 -filter_complex amix=inputs=2:duration=first  -ac 1  output1.mp3
+
+// mix audio and video
+// ffmpeg  -i video/video_0.mp4 -i audio/audio_0.mp3 -filter_complex  "[1:a] atrim=duration=10:start=120 [1], [0:a][1]   amix=inputs=2" -ac 2 output.mp3
+
+// add silence between 2 audios and trim (video/audio)
+// ffmpeg -loglevel verbose -y -i mono.mp3 -i stereo.mp3 -filter_complex "[0:a] silenceremove=stop_periods=1:stop_duration=1:stop_threshold=-50dB [first], [1:a] silenceremove=start_periods=1:start_duration=0:start_threshold=-50dB [second],aevalsrc=exprs=0:d=5[silence],[first] [silence] [second] concat=n=3:v=0:a=1" output.mp3
+// ffmpeg -loglevel verbose -y -i audio/audio_0.mp3 -i video/video_0.mp4  -filter_complex "[0:a] silenceremove=stop_periods=1:stop_duration=1:stop_threshold=-50dB [first], [1:a] silenceremove=start_periods=1:start_duration=5:start_threshold=-50dB [second],aevalsrc=exprs=0:d=5[silence],[second][silence][first] concat=n=3:v=0:a=1" output.mp3
+// latest
+// ffmpeg -loglevel verbose -y -i audio/audio_0.mp3 -i video/video_0.mp4  -filter_complex "[0:a] atrim=duration=5:start=120  [first], [1:a] atrim=start=10:end=15 [second],aevalsrc=exprs=0:d=5[silence1],aevalsrc=exprs=0:d=5[silence2],[silence1][second][silence2][first] concat=n=4:v=0:a=1" output.mp3
+
+
+async function extractFrames(inputVideoPath, outputPattern, { frameCount, startTime = 0, duration }) {
+    // const stream = new Writable({
+    //     write: (chunk) => {
+    //         // fs.writeFileSync('intermediates/frame.png', chunk)
+    //         console.log('arjun', chunk);
+    //     },
+    //     emitClose: true
+    // })
+
+    // const stream = fs.createWriteStream('intermediates/frame_%d.png');
+
+    // const stream = new PassThrough();
 
     return new Promise((resolve) => {
         ffmpegCommand
             .input(inputVideoPath)
+            .setStartTime(startTime)
+            .setDuration(duration)
             .frames(frameCount)
             .output(outputPattern)
+            // .outputOptions(['-f image2pipe'])
             .on('start', () => {
                 console.log(extractFrames.name, 'started');
             }).on('end', () => {
                 console.log(extractFrames.name, 'completed');
                 resolve();
             }).on('error', (err, stderr, stdout) => {
-                console.error('ffmpeg error:', err.message, stderr, stdout);
-            }).run()
+                console.error('ffmpeg error:', err.message, stdout);
+            })
+            .run()
+        // .stream(stream)
     });
 
 }
@@ -61,7 +99,7 @@ async function generateVideo(secs) {
     })
 
 
-    // await extractFrames('./inputVideo.mp4', 'intermediates/frame_%d.png', 15 * 30);
+    await extractFrames('./inputVideo.mp4', 'intermediates/frame_%d.png', 15 * 30);
 
     const command = ffmpeg();
     command.setFfmpegPath(ffmpegPath);
@@ -111,19 +149,28 @@ async function generateVideo(secs) {
 
         app.render()
 
-        const baseData = app.view
-            .toDataURL().replace('data:image/png;base64,', '')
+        const baseData = app.view.toDataURL();
+
+        // if (frame === 2) {
+        //     console.log('baseData', baseData)
+        // }
 
         return Buffer.from(baseData, 'base64')
     }
 
 
     // Loop until there are no more frames to process
+    const paths = []
     while (frame <= frames) {
         const frameBuffer = await goXWise();
         if (frameBuffer) {
             // fs.writeFileSync(`intermediates/frame_${frame}.png`, frameBuffer)
-            inputStream.write(frameBuffer)
+            // inputStream.write(frameBuffer)
+            const tmpobj = tmp.fileSync({
+                postfix: '.png'
+            });
+            fs.writeFileSync(tmpobj.name, frameBuffer);
+            paths.push(tmpobj.name)
         }
         frame++;
     }
@@ -135,7 +182,16 @@ async function generateVideo(secs) {
 
     inputStream.end();
 
-    command.input(inputStream);
+    // var tmpobj = tmp.fileSync({
+    //     dir: 'mot/',
+    // });
+    // fs.writeFileSync(tmpobj.name, data);
+
+    // tmpobj.removeCallback()
+
+    paths.forEach((path) => {
+        command.input(path);
+    })
     let ffmpegStartTime;
 
     command.output('output.mp4')
@@ -157,6 +213,7 @@ async function generateVideo(secs) {
         .run();
 
     app.destroy();
+    // exec('rm -rf intermediates/*')
     console.log('Processed', frame, 'frames.');
 }
 
@@ -166,7 +223,14 @@ async function generateVideo(secs) {
 // });
 
 (async () => {
-    await generateVideo(20);
+    // await generateVideo(5);
+    await extractFrames('inputVideo.mp4', 'intermediates/inputVideo_frame_%d.png', {
+        duration: 7,
+        startTime: 8,
+        frameCount: 7 * 30
+
+    });
+
 })();
 
 

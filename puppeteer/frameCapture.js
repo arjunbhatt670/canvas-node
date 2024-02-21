@@ -81,3 +81,9 @@ const frameCapture = async () => {
 };
 
 frameCapture();
+
+
+// const command = ffmpeg();
+// command.setFfmpegPath(ffmpegPath);
+
+// command.input('assets/WMV_Video_File.wmv').output('output.mp4').withAudioCodec('flac').run();

@@ -116,9 +116,10 @@ const asyncIterable = (times) => ({
 
 Function.prototype.myCall = function (obj, ...args) {
   const sym = Symbol();
-  obj[sym] = this;
-  obj[sym](...args);
-  delete obj[sym];
+  const obj2 = obj;
+  obj2[sym] = this;
+  obj2[sym](...args);
+  delete obj2[sym];
 }
 
 Function.prototype.myApply = function (obj, args) {
@@ -129,9 +130,9 @@ Function.prototype.myApply = function (obj, args) {
 }
 
 Function.prototype.myBind = function (obj, ...args) {
-  const sym = Symbol();
-  obj[sym] = this;
   return (...inArgs) => {
+    const sym = Symbol();
+    obj[sym] = this;
     obj[sym](...args, ...inArgs);
     delete obj[sym]
   };
@@ -180,3 +181,30 @@ module.exports = {
   PuppeteerMassScreenshots,
   asyncIterable
 }
+
+
+class Animal {
+
+}
+
+Animal.prototype = {
+  constructor: Animal,
+  __proto__: Object.prototype
+}
+
+class Dog extends Animal {
+
+}
+
+Dog.prototype = {
+  constructor: Dog,
+  __proto__: Animal.prototype
+}
+
+const dog = new Dog();
+
+const dog = {
+  __proto__: Dog.prototype
+};
+
+dog.__proto__ = Dog.prototype;
