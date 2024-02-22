@@ -24,34 +24,49 @@ global.ImageData = ImageData
 global.Canvas = Canvas;
 global.Image = Image;
 
-const ffmpegCommand = ffmpeg();
-ffmpegCommand.setFfmpegPath(ffmpegPath);
-
 
 const PIXI = require('@pixi/node');
 const fs = require('fs');
-const mediaData = require('./data.json')
+const mediaData = require('./data.json');
 
-async function extractFrames(inputVideoPath, outputPattern, { frameCount, startTime = 0, duration, frameRate }) {
-    const stream = new Writable({
-        write: (chunk) => {
-            // fs.writeFileSync('intermediates/frame.png', chunk)
-            console.log('arjun', chunk);
-        }
-    })
+function getFrame({ frame = '%d', format, dir, frameName }) {
+    return `${dir}/${frameName}_frame%d.${format}`.replace('%d', frame)
+}
+
+async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRate, width, height, outputFormat = 'png', dir, frameName }) {
+    const outputPath = getFrame({ dir, format: outputFormat, frameName });
+    await new Promise((res, rej) => exec(`rm -rf ${outputPath.replace('%d', '**')}`, (err) => err ? rej(err) : res()));
+    // const stream = new Writable({
+    //     write: (chunk) => {
+    //         console.log('chunk', chunk)
+    //     }
+    // })
+
+    // stream.on('pipe', async (src) => {
+    //     console.log(await src.every(data => {
+    //         console.log('data', data)
+    //     }))
+    // })
 
     // const stream = new PassThrough();
 
-    let i = 0;
+    // stream.on('data', (chunk) => {
+    //     console.log('chunk', chunk)
+    // })
+
     return new Promise((resolve) => {
+        const ffmpegCommand = ffmpeg();
+        ffmpegCommand.setFfmpegPath(ffmpegPath);
+
         ffmpegCommand
             .input(inputVideoPath)
+            // .inputOptions(['-f rawvideo'])
             .fpsInput(frameRate)
             .setStartTime(startTime)
             .setDuration(duration)
-            .frames(frameCount)
-            .output(outputPattern)
-            // .outputOptions(['-f matroska', '-c:v png'])
+            .output(outputPath)
+            .outputOptions([`-vf fps=${frameRate}`, `-vf scale=${width ?? -1}:${height ?? -1}`])
+            // .outputOptions(['-c:v png', '-vsync 0'])
             .on('start', () => {
                 console.log('frame extraction for', inputVideoPath, 'started');
             }).on('end', () => {
@@ -61,13 +76,20 @@ async function extractFrames(inputVideoPath, outputPattern, { frameCount, startT
                 console.error('ffmpeg error:', err.message, stdout);
             })
             .run()
-        // .pipe().on('data', (chunk) => {
-        //     console.log('arjun data', chunk);
-        //     fs.writeFile(`intermediates/file${i}.png`, chunk, () => { });
-        //     // i++;
-        // })
-    });
+        // .stream(undefined, {
+        //     end: true
+        // }).on('data', (chunk) => {
+        //     console.log('chunk', Buffer.from(chunk).byteLength);
+        //     console.log(i)
+        //     i++;
+        //     // fs.writeFile(`intermediates/file${i}.png`, chunk, () => { });
+        // });
 
+        // ffmpegCommand.ffprobe((err, data) => {
+        //     console.log('dataaaaa', data)
+        // })
+
+    })
 }
 
 
@@ -257,29 +279,140 @@ async function generateVideo({
     console.log('Processed', frame, 'frames.');
 }
 
-// Call the async function to start generating the video
-generateVideo({
-    duration: 5, frameRate: 22, startTime: 9
-}).catch(err => {
-    console.error('Error generating video:', err);
-    exec('rm -rf intermediates/*');
-}).then(() => {
-    exec('rm -rf intermediates/*');
-});
-
-// (async () => {
-
-//     mediaData.tracks.forEach((v) => {
-//         v.clips.forEach(async (clip) => {
-//             await generateVideo()
-//         })
-//     });
-//     await generateVideo(5);
-
-// })();
+// // Call the async function to start generating the video
+// generateVideo({
+//     duration: 5, frameRate: 22, startTime: 9
+// }).catch(err => {
+//     console.error('Error generating video:', err);
+//     // exec('rm -rf intermediates/*');
+// }).then(() => {
+//     // exec('rm -rf intermediates/*');
+// });
 
 
 // tracks will be mixed
 // single track audio will be joined
 
+(async () => {
+    const videoClips = mediaData.tracks.map((track) => track.clips.map((clip) => clip.type === 'VIDEO_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
+    const promises = videoClips.map((clip) => {
+        return extractFrames(clip.sourceUrl, {
+            duration: clip.duration / 1000,
+            startTime: clip.trimOffset / 1000,
+            frameRate: mediaData.videoProperties.frameRate,
+            dir: 'intermediates',
+            frameName: clip.id,
+            height: clip.coordinates.height,
+            width: clip.coordinates.width
+        });
+    });
+
+    await Promise.allSettled(promises);
+
+    const totalFrames = (mediaData.videoProperties.duration * mediaData.videoProperties.frameRate) / 1000;
+
+    const app = new PIXI.Application({
+        width: mediaData.videoProperties.width,
+        height: mediaData.videoProperties.height,
+        hello: true
+    });
+
+    await PIXI.Assets.init({
+        // basePath: 'intermediates',
+        skipDetections: true
+    });
+
+
+    const inputStream = new PassThrough();
+
+    let pixiStart = Date.now();
+    let currentFrame = 1;
+
+    while (currentFrame <= totalFrames) {
+        const clips = getVisibleObjects(currentFrame, mediaData.videoProperties.frameRate);
+
+        const promises = clips.map(async (clip) => {
+            const clipStartFrame = (clip.startOffSet * mediaData.videoProperties.frameRate) / 1000
+            if (clip.type === 'VIDEO_CLIP') {
+                const videoFramePath = getFrame({
+                    frame: currentFrame + 1 - clipStartFrame,
+                    dir: 'intermediates',
+                    format: 'png',
+                    frameName: clip.id
+                });
+                console.log('videoPath', currentFrame, videoFramePath);
+
+                const img = await PIXI.Assets.load(videoFramePath);
+
+                const sprite = PIXI.Sprite.from(img);
+                sprite.x = clip.coordinates.x;
+                sprite.y = clip.coordinates.y;
+                sprite.width = clip.coordinates.width;
+                sprite.height = clip.coordinates.height;
+
+                app.stage.addChild(sprite);
+
+                const baseData = (await app.renderer.extract.base64()).replace('data:image/png;base64,', '');
+
+                inputStream.write(Buffer.from(baseData, 'base64'));
+            }
+        });
+
+        await Promise.allSettled(promises)
+
+        currentFrame++;
+    }
+
+    const pixiEnd = Date.now();
+    console.log("pixi/node drawing time spent of all frames", pixiEnd - pixiStart, 'ms')
+
+    inputStream.end();
+
+
+    const command = ffmpeg();
+    command.setFfmpegPath(ffmpegPath);
+    let ffmpegStartTime
+    command.input(inputStream);
+    command.inputFPS(mediaData.videoProperties.frameRate);
+    command.output('output.mp4').fpsOutput(mediaData.videoProperties.frameRate).on('start', () => {
+        ffmpegStartTime = Date.now();
+        console.log('ffmpeg process started');
+    })
+        .on('error', (err, stdout, stderr) => {
+            console.error('ffmpeg error:', err.message);
+            console.error('ffmpeg stderr:', stderr);
+        })
+        .on('end', () => {
+            console.log('Video encoding finished');
+            console.log('ffmpeg video conversion time spent', Date.now() - ffmpegStartTime, 'ms');
+            command.input('output.mp4').ffprobe(function (err, metadata) {
+                console.log('Duration of video', metadata.format.duration, 'seconds');
+            });
+        })
+        .run()
+
+    app.destroy();
+})();
+
+
+function getVisibleObjects(frame, frameRate) {
+    const timeInstance = (frame * 1000) / frameRate;
+    return mediaData.tracks.map((track) => track.clips.map((clip) => clip)).flat(1).filter((clip) => (['VIDEO_CLIP'].includes(clip.type) && clip.startOffSet <= timeInstance && timeInstance < (clip.startOffSet + clip.duration)));
+}
+
+
+// extractFrames('./assets/inputVideo2.mp4', {
+//     duration: 2,
+//     startTime: 0,
+//     width: 720,
+//     frameRate: 120,
+//     outputFormat: 'png',
+//     dir: 'intermediates',
+//     frameName: 'inputVideo'
+// });
+
+
+
+
+// ffmpeg -i filename 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"

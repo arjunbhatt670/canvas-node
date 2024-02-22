@@ -6,16 +6,17 @@
         {
           "id": "02d92766-ccd7-48e5-849f-3e90825759ed",
           "type": "VIDEO_CLIP",
+          "trimOffset": 10000,
           "startOffSet": 0,
-          "duration": 3000,
+          "duration": 20000,
           "endOffSet": 3000,
           "coordinates": {
             "x": 230,
             "y": 90,
-            "width": 180,
-            "height": 180
+            "width": 640,
+            "height": 320
           },
-          "sourceUrl": "./assets/audio/sample.ogg",
+          "sourceUrl": "./assets/horses.mp4",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -24,16 +25,17 @@
         {
           "id": "f1e23c8d-a367-493c-acc7-75f04b7a2cd8",
           "type": "VIDEO_CLIP",
-          "startOffSet": 3893,
+          "trimOffset": 0,
+          "startOffSet": 20000,
           "duration": 5000,
           "endOffSet": 8893,
           "coordinates": {
-            "x": 230,
+            "x": 440,
             "y": 90,
-            "width": 180,
-            "height": 180
+            "width": 640,
+            "height": 320
           },
-          "sourceUrl": "./assets/inputVideo2.mp4",
+          "sourceUrl": "./assets/bunny.mp4",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -42,16 +44,17 @@
         {
           "id": "778942d8-985d-4bca-b366-6d8417b18d09",
           "type": "VIDEO_CLIP",
-          "startOffSet": 12000,
-          "duration": 4000,
+          "trimOffset": 4,
+          "startOffSet": 25000,
+          "duration": 10000,
           "endOffSet": 12893,
           "coordinates": {
-            "x": 230,
-            "y": 90,
-            "width": 180,
-            "height": 180
+            "x": 0,
+            "y": 380,
+            "width": 640,
+            "height": 320
           },
-          "sourceUrl": "./assets/audio/sample1.flac",
+          "sourceUrl": "./assets/dragon.mp4",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -64,7 +67,8 @@
       "clips": [
         {
           "id": "92d92766-ccd7-48e5-849f-3e90825759ed",
-          "type": "VIDEO_CLIP",
+          "type": "AUDIO_CLIP",
+          "trimOffset": 1000,
           "startOffSet": 7000,
           "duration": 6000,
           "endOffSet": 16000,
@@ -82,9 +86,10 @@
         },
         {
           "id": "6566792766-ccd7-48e5-849f-3e90825759ed",
-          "type": "VIDEO_CLIP",
-          "startOffSet": 1000,
-          "duration": 6000,
+          "type": "AUDIO_CLIP",
+          "trimOffset": 1000,
+          "startOffSet": 16000,
+          "duration": 4000,
           "endOffSet": 16000,
           "coordinates": {
             "x": 230,
@@ -92,7 +97,7 @@
             "width": 180,
             "height": 180
           },
-          "sourceUrl": "./assets/audio/sample3.wma",
+          "sourceUrl": "./assets/audio/sample3.aiff",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -102,9 +107,9 @@
     }
   ],
   "videoProperties": {
-    "duration": 20000,
+    "duration": 5,
     "frameRate": 30,
-    "height": 360,
-    "width": 640
+    "height": 720,
+    "width": 1080
   }
 }

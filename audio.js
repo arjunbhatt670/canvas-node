@@ -56,7 +56,7 @@ const trimAndJoin = (clips = [], totalDuration, outputPath, format) =>
                 inputs: `[${index}:a]`,
                 options: {
                     duration: clip.duration / 1000,
-                    start: clip.start / 1000,
+                    start: clip.trim / 1000,
                 },
                 outputs: `[audio${index}]`,
             });
@@ -154,12 +154,16 @@ const mixAudios = (audios, outputPath, format) =>
     });
 
 (async () => {
+    const start = Date.now();
+
     const promises = mediaData.tracks.map((track) => {
+        /** @type {Clip[]} */
         const clips = track.clips.map((clip) => ({
             duration: clip.duration,
             src: clip.sourceUrl,
             start: clip.startOffSet,
             end: clip.endOffSet,
+            trim: clip.trimOffset
         }));
 
         return trimAndJoin(clips, mediaData.videoProperties.duration, `intermediates/${track.id}.mp3`, 'mp3');
@@ -172,6 +176,8 @@ const mixAudios = (audios, outputPath, format) =>
     );
 
     await mixAudios(createdAudioTracks, "output.mp3", 'mp3');
+
+    console.log('time', Date.now() - start)
 
     mediaData.tracks.forEach((track) => {
         fs.unlink(`intermediates/${track.id}.mp3`, (err) => {
