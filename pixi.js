@@ -8,15 +8,16 @@ const { WebGLRenderingContext } = require('gl')
 const { Canvas, Image, CanvasRenderingContext2D, ImageData, loadImage } = require('canvas');
 const { JSDOM } = require('jsdom');
 const Worker = require('worker_threads');
-require('pixi-shim');
+// require('pixi-shim');
 const { Writable } = require('node:stream');
 const tmp = require("tmp")
 
 global.Worker = Worker.Worker;
-const document = new JSDOM().window.document;
-global.document = document;
-global.window = document.defaultView;
-global.window.document = global.document;
+// const jsdom = new JSDOM();
+// const document = jsdom.window.document;
+// global.document = document;
+// global.window = document.defaultView;
+// global.window.document = global.document;
 global.WebGLRenderingContext = WebGLRenderingContext
 global.CanvasRenderingContext2D = CanvasRenderingContext2D
 global.ImageData = ImageData
@@ -29,87 +30,84 @@ ffmpegCommand.setFfmpegPath(ffmpegPath);
 
 const PIXI = require('@pixi/node');
 const fs = require('fs');
+const mediaData = require('./data.json')
 
-
-// convert stereo to mono
-//ffmpeg -i stereo.flac -ac 1 mono.flac
-
-//join 2 audio
-///  ffmpeg -i mono.mp3 -i stereo.mp3  -filter_complex "[0:a][1:a]concat=n=2:v=0:a=1" output.mp3
-
-// mix two audios
-// ffmpeg -i stereo.mp3 -i mono.mp3 -filter_complex amix=inputs=2:duration=first  -ac 1  output1.mp3
-
-// mix audio and video
-// ffmpeg  -i video/video_0.mp4 -i audio/audio_0.mp3 -filter_complex  "[1:a] atrim=duration=10:start=120 [1], [0:a][1]   amix=inputs=2" -ac 2 output.mp3
-
-// add silence between 2 audios and trim (video/audio)
-// ffmpeg -loglevel verbose -y -i mono.mp3 -i stereo.mp3 -filter_complex "[0:a] silenceremove=stop_periods=1:stop_duration=1:stop_threshold=-50dB [first], [1:a] silenceremove=start_periods=1:start_duration=0:start_threshold=-50dB [second],aevalsrc=exprs=0:d=5[silence],[first] [silence] [second] concat=n=3:v=0:a=1" output.mp3
-// ffmpeg -loglevel verbose -y -i audio/audio_0.mp3 -i video/video_0.mp4  -filter_complex "[0:a] silenceremove=stop_periods=1:stop_duration=1:stop_threshold=-50dB [first], [1:a] silenceremove=start_periods=1:start_duration=5:start_threshold=-50dB [second],aevalsrc=exprs=0:d=5[silence],[second][silence][first] concat=n=3:v=0:a=1" output.mp3
-// latest
-// ffmpeg -loglevel verbose -y -i audio/audio_0.mp3 -i video/video_0.mp4  -filter_complex "[0:a] atrim=duration=5:start=120  [first], [1:a] atrim=start=10:end=15 [second],aevalsrc=exprs=0:d=5[silence1],aevalsrc=exprs=0:d=5[silence2],[silence1][second][silence2][first] concat=n=4:v=0:a=1" output.mp3
-
-
-async function extractFrames(inputVideoPath, outputPattern, { frameCount, startTime = 0, duration }) {
-    // const stream = new Writable({
-    //     write: (chunk) => {
-    //         // fs.writeFileSync('intermediates/frame.png', chunk)
-    //         console.log('arjun', chunk);
-    //     },
-    //     emitClose: true
-    // })
-
-    // const stream = fs.createWriteStream('intermediates/frame_%d.png');
+async function extractFrames(inputVideoPath, outputPattern, { frameCount, startTime = 0, duration, frameRate }) {
+    const stream = new Writable({
+        write: (chunk) => {
+            // fs.writeFileSync('intermediates/frame.png', chunk)
+            console.log('arjun', chunk);
+        }
+    })
 
     // const stream = new PassThrough();
 
+    let i = 0;
     return new Promise((resolve) => {
         ffmpegCommand
             .input(inputVideoPath)
+            .fpsInput(frameRate)
             .setStartTime(startTime)
             .setDuration(duration)
             .frames(frameCount)
             .output(outputPattern)
-            // .outputOptions(['-f image2pipe'])
+            // .outputOptions(['-f matroska', '-c:v png'])
             .on('start', () => {
-                console.log(extractFrames.name, 'started');
+                console.log('frame extraction for', inputVideoPath, 'started');
             }).on('end', () => {
-                console.log(extractFrames.name, 'completed');
+                console.log('frame extraction for', inputVideoPath, 'completed');
                 resolve();
             }).on('error', (err, stderr, stdout) => {
                 console.error('ffmpeg error:', err.message, stdout);
             })
             .run()
-        // .stream(stream)
+        // .pipe().on('data', (chunk) => {
+        //     console.log('arjun data', chunk);
+        //     fs.writeFile(`intermediates/file${i}.png`, chunk, () => { });
+        //     // i++;
+        // })
     });
 
 }
 
 
-async function generateVideo(secs) {
+async function generateVideo({
+    duration, frameRate, startTime
+}) {
 
-    const frameRate = 30;
-    const frames = frameRate * secs;
+    const frames = frameRate * duration;
 
-    console.log('Requested video time', secs, 'seconds');
+
+    await extractFrames('inputVideo.mp4', 'intermediates/inputVideo_frame_%d.png', {
+        duration,
+        startTime,
+        frameCount: duration * frameRate,
+        frameRate
+
+    });
+
+    // return;
+
+    console.log('Requested video time', duration, 'seconds');
     console.log('Using frame rate', frameRate, 'fps');
 
     await PIXI.Assets.init({
-        basePath: 'intermediates'
+        // basePath: 'intermediates',
+        skipDetections: true
     })
 
 
-    await extractFrames('./inputVideo.mp4', 'intermediates/frame_%d.png', 15 * 30);
+    // await extractFrames('./inputVideo.mp4', 'intermediates/frame_%d.png', 15 * 30);
 
     const command = ffmpeg();
     command.setFfmpegPath(ffmpegPath);
     command.outputOptions([
-        '-c:v libx264',     // Use H.264 codec
-        '-preset veryfast', // Preset for fast encoding
-        '-crf 23',          // Constant rate factor for video quality
+        // '-c:v libx264',     // Use H.264 codec
+        // '-preset veryfast', // Preset for fast encoding
+        // '-crf 23',          // Constant rate factor for video quality
         `-r ${frameRate}`,            // Frame rate
-        `-t ${secs}`,
-        '-pix_fmt yuv420p', // Pixel format
+        `-t ${duration}`,
+        // '-pix_fmt yuv420p', // Pixel format
         // '-vf scale=1280:-2' // Scale width to 1280 pixels while preserving aspect ratio (change if needed)
     ]);
     const inputStream = new PassThrough();
@@ -127,18 +125,20 @@ async function generateVideo(secs) {
     let oldRef;
 
     const goXWise = async () => {
+        console.log('frame', frame)
         const rectangle = new PIXI.Graphics();
         rectangle.beginFill(0xFF0000);
         rectangle.drawRect(frame % app.renderer.width, 0, 50, 50);
         rectangle.endFill();
 
+        let start = Date.now();
+        const img = await PIXI.Assets.load(`intermediates/inputVideo_frame_${frame}.png`);
 
-        // const videoFrame = await loadImage(`intermediates/frame_${frame}.png`); // Use the input video file directly
+        console.log('time1', Date.now() - start);
+        start = Date.now();
+        app.stage.addChild(PIXI.Sprite.from(img));
 
-        if (frame <= 360) {
-            const img = await PIXI.Assets.load(`frame_${frame}.png`);
-            app.stage.addChild(PIXI.Sprite.from(img));
-        }
+        console.log('time2', Date.now() - start);
 
         if (oldRef) {
             app.stage.removeChild(oldRef)
@@ -147,13 +147,12 @@ async function generateVideo(secs) {
 
         app.stage.addChild(rectangle);
 
-        app.render()
+        start = Date.now();
+        // app.render()
 
-        const baseData = app.view.toDataURL();
+        const baseData = (await app.renderer.extract.base64()).replace('data:image/png;base64,', '');
 
-        // if (frame === 2) {
-        //     console.log('baseData', baseData)
-        // }
+        console.log('time3', Date.now() - start);
 
         return Buffer.from(baseData, 'base64')
     }
@@ -165,15 +164,56 @@ async function generateVideo(secs) {
         const frameBuffer = await goXWise();
         if (frameBuffer) {
             // fs.writeFileSync(`intermediates/frame_${frame}.png`, frameBuffer)
-            // inputStream.write(frameBuffer)
-            const tmpobj = tmp.fileSync({
-                postfix: '.png'
-            });
-            fs.writeFileSync(tmpobj.name, frameBuffer);
-            paths.push(tmpobj.name)
+            inputStream.write(frameBuffer)
+            // const tmpobj = tmp.fileSync({
+            //     postfix: '.png'
+            // });
+            // fs.writeFileSync(tmpobj.name, frameBuffer);
+            // paths.push(tmpobj.name)
         }
         frame++;
     }
+
+    // console.log(PIXI.VideoResource.MIME_TYPES);
+    // // const videoResource = new PIXI.VideoResource('https://pixijs.com/assets/video.mp4');
+    // // const vid = await PIXI.Assets.load(`intermediates/inputVideo.mp4`);
+    // const texture = PIXI.Texture.fromBuffer(fs.readFileSync(`intermediates/inputVideo.mp4`), 1200, 700);
+
+
+    // // create a new Sprite using the video texture (yes it's that easy)
+    // const videoSprite = new PIXI.Sprite(texture);
+
+    // // Stetch the fullscreen
+    // videoSprite.width = app.screen.width;
+    // videoSprite.height = app.screen.height;
+
+    // app.stage.addChild(videoSprite);
+
+    // const rectangle = new PIXI.Graphics();
+    // rectangle.beginFill(0xFF0000);
+    // rectangle.drawRect(frame % app.renderer.width, 0, 50, 50);
+    // rectangle.endFill();
+
+    // app.stage.addChild(rectangle)
+
+    // app.ticker.start()
+
+    // app.ticker.add(async (dt) => {
+    //     console.log('dt', dt);
+    //     app.render();
+    //     console.log(await app.view.toDataURL());
+    // })
+
+    // setTimeout(() => {
+    //     app.ticker.stop();
+    //     app.destroy();
+    // }, 1000)
+
+    // console.log(requestAnimationFrame(() => {
+    //     console.log('helloooooo')
+    // }))
+
+    // app.screen()
 
 
     const pixiEnd = Date.now();
@@ -189,9 +229,10 @@ async function generateVideo(secs) {
 
     // tmpobj.removeCallback()
 
-    paths.forEach((path) => {
-        command.input(path);
-    })
+    // paths.forEach((path) => {
+    // })
+    command.input(inputStream);
+    command.inputFPS(frameRate);
     let ffmpegStartTime;
 
     command.output('output.mp4')
@@ -213,24 +254,32 @@ async function generateVideo(secs) {
         .run();
 
     app.destroy();
-    // exec('rm -rf intermediates/*')
     console.log('Processed', frame, 'frames.');
 }
 
 // Call the async function to start generating the video
-// generateVideo(30).catch(err => {
-//     console.error('Error generating video:', err);
-// });
+generateVideo({
+    duration: 5, frameRate: 22, startTime: 9
+}).catch(err => {
+    console.error('Error generating video:', err);
+    exec('rm -rf intermediates/*');
+}).then(() => {
+    exec('rm -rf intermediates/*');
+});
 
-(async () => {
-    // await generateVideo(5);
-    await extractFrames('inputVideo.mp4', 'intermediates/inputVideo_frame_%d.png', {
-        duration: 7,
-        startTime: 8,
-        frameCount: 7 * 30
+// (async () => {
 
-    });
+//     mediaData.tracks.forEach((v) => {
+//         v.clips.forEach(async (clip) => {
+//             await generateVideo()
+//         })
+//     });
+//     await generateVideo(5);
 
-})();
+// })();
+
+
+// tracks will be mixed
+// single track audio will be joined
 
 

@@ -15,7 +15,7 @@
             "width": 180,
             "height": 180
           },
-          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/88535c3f-0326-40c5-ae7a-6af5bbb66879-655653633/Detergent(mp4).mp4",
+          "sourceUrl": "./assets/audio/sample.ogg",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -33,7 +33,7 @@
             "width": 180,
             "height": 180
           },
-          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/8093b3f6-0b70-48f9-b330-7541b010d161-1779335853/Sample4.mp4",
+          "sourceUrl": "./assets/inputVideo2.mp4",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -42,7 +42,7 @@
         {
           "id": "778942d8-985d-4bca-b366-6d8417b18d09",
           "type": "VIDEO_CLIP",
-          "startOffSet": 8893,
+          "startOffSet": 12000,
           "duration": 4000,
           "endOffSet": 12893,
           "coordinates": {
@@ -51,7 +51,48 @@
             "width": 180,
             "height": 180
           },
-          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/40d45db1-7766-4c45-a739-099865bf0c8f-77700412/Import_from_API_16578510004034.mp4",
+          "sourceUrl": "./assets/audio/sample1.flac",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "a4124f38-4b71-4342-a457-0154e11e2fa9",
+      "clips": [
+        {
+          "id": "92d92766-ccd7-48e5-849f-3e90825759ed",
+          "type": "VIDEO_CLIP",
+          "startOffSet": 7000,
+          "duration": 6000,
+          "endOffSet": 16000,
+          "coordinates": {
+            "x": 230,
+            "y": 90,
+            "width": 180,
+            "height": 180
+          },
+          "sourceUrl": "./assets/audio/sample3.aac",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        },
+        {
+          "id": "6566792766-ccd7-48e5-849f-3e90825759ed",
+          "type": "VIDEO_CLIP",
+          "startOffSet": 1000,
+          "duration": 6000,
+          "endOffSet": 16000,
+          "coordinates": {
+            "x": 230,
+            "y": 90,
+            "width": 180,
+            "height": 180
+          },
+          "sourceUrl": "./assets/audio/sample3.wma",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -61,7 +102,7 @@
     }
   ],
   "videoProperties": {
-    "duration": 12916,
+    "duration": 20000,
     "frameRate": 30,
     "height": 360,
     "width": 640
