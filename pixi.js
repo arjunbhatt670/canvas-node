@@ -296,6 +296,7 @@ async function generateVideo({
 (async () => {
     const videoClips = mediaData.tracks.map((track) => track.clips.map((clip) => clip.type === 'VIDEO_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
+    const extractStart = Date.now();
     const promises = videoClips.map((clip) => {
         return extractFrames(clip.sourceUrl, {
             duration: clip.duration / 1000,
@@ -309,6 +310,7 @@ async function generateVideo({
     });
 
     await Promise.allSettled(promises);
+    console.log('extraction time', Date.now() - extractStart)
 
     const totalFrames = (mediaData.videoProperties.duration * mediaData.videoProperties.frameRate) / 1000;
 
@@ -329,11 +331,19 @@ async function generateVideo({
     let pixiStart = Date.now();
     let currentFrame = 1;
 
+    console.log('totalFrames', totalFrames);
+
+    let fileSystemAccessTime = 0;
+
     while (currentFrame <= totalFrames) {
         const clips = getVisibleObjects(currentFrame, mediaData.videoProperties.frameRate);
 
-        const promises = clips.map(async (clip) => {
-            const clipStartFrame = (clip.startOffSet * mediaData.videoProperties.frameRate) / 1000
+        const container = new PIXI.Container();
+        app.stage = container;
+
+        for (let clipIndex = 0; clipIndex < clips.length; clipIndex++) { // 5ms
+            const clip = clips[clipIndex];
+            const clipStartFrame = (clip.startOffSet * mediaData.videoProperties.frameRate) / 1000;
             if (clip.type === 'VIDEO_CLIP') {
                 const videoFramePath = getFrame({
                     frame: currentFrame + 1 - clipStartFrame,
@@ -341,9 +351,10 @@ async function generateVideo({
                     format: 'png',
                     frameName: clip.id
                 });
-                console.log('videoPath', currentFrame, videoFramePath);
 
+                const time = Date.now();
                 const img = await PIXI.Assets.load(videoFramePath);
+                fileSystemAccessTime += (Date.now() - time)
 
                 const sprite = PIXI.Sprite.from(img);
                 sprite.x = clip.coordinates.x;
@@ -351,15 +362,29 @@ async function generateVideo({
                 sprite.width = clip.coordinates.width;
                 sprite.height = clip.coordinates.height;
 
-                app.stage.addChild(sprite);
-
-                const baseData = (await app.renderer.extract.base64()).replace('data:image/png;base64,', '');
-
-                inputStream.write(Buffer.from(baseData, 'base64'));
+                container.addChild(sprite);
             }
-        });
+        }
 
-        await Promise.allSettled(promises)
+        // const baseData = app.renderer.extract.canvas().toDataURL().replace('data:image/png;base64,', '');
+
+        // const baseData = (await app.renderer.extract.base64()).replace('data:image/png;base64,', '');
+
+        app.render();
+        const baseData = app.view.toDataURL('image/jpeg', 1);   // 5ms
+
+        // const baseData = app.renderer.extract.canvas(app.stage).toDataURL('image/jpeg', 1)
+        // app.stage.removeChild(container)
+
+
+        // const intArray = app.renderer.extract.pixels();
+
+        // fs.writeFileSync(`coc/frame${currentFrame}.png
+        // `, Buffer.from(intArray))
+
+        // inputStream.write(Buffer.from(intArray, 'base64'));
+
+        inputStream.write(Buffer.from(baseData, 'base64'));  // 0.15ms
 
         currentFrame++;
     }
@@ -368,6 +393,8 @@ async function generateVideo({
     console.log("pixi/node drawing time spent of all frames", pixiEnd - pixiStart, 'ms')
 
     inputStream.end();
+
+    console.log('total file system access time', fileSystemAccessTime, 'ms');
 
 
     const command = ffmpeg();

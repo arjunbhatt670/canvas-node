@@ -6,9 +6,9 @@
         {
           "id": "02d92766-ccd7-48e5-849f-3e90825759ed",
           "type": "VIDEO_CLIP",
-          "trimOffset": 10000,
+          "trimOffset": 0,
           "startOffSet": 0,
-          "duration": 20000,
+          "duration": 30000,
           "endOffSet": 3000,
           "coordinates": {
             "x": 230,
@@ -17,6 +17,30 @@
             "height": 320
           },
           "sourceUrl": "./assets/horses.mp4",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "a4124f38-4b71-4342-a457-0154e11e2fa9",
+      "clips": [
+        {
+          "id": "778942d8-985d-4bca-b366-6d8417b18d09",
+          "type": "VIDEO_CLIP",
+          "trimOffset": 4000,
+          "startOffSet": 5000,
+          "duration": 10000,
+          "endOffSet": 12893,
+          "coordinates": {
+            "x": 0,
+            "y": 380,
+            "width": 640,
+            "height": 320
+          },
+          "sourceUrl": "./assets/dragon.mp4",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -31,7 +55,7 @@
           "endOffSet": 8893,
           "coordinates": {
             "x": 440,
-            "y": 90,
+            "y": 400,
             "width": 640,
             "height": 320
           },
@@ -41,30 +65,6 @@
           "crop": "FILL",
           "dynamicVideoEnabled": false
         },
-        {
-          "id": "778942d8-985d-4bca-b366-6d8417b18d09",
-          "type": "VIDEO_CLIP",
-          "trimOffset": 4,
-          "startOffSet": 25000,
-          "duration": 10000,
-          "endOffSet": 12893,
-          "coordinates": {
-            "x": 0,
-            "y": 380,
-            "width": 640,
-            "height": 320
-          },
-          "sourceUrl": "./assets/dragon.mp4",
-          "opacity": 1,
-          "rotationAngle": 0,
-          "crop": "FILL",
-          "dynamicVideoEnabled": false
-        }
-      ]
-    },
-    {
-      "id": "a4124f38-4b71-4342-a457-0154e11e2fa9",
-      "clips": [
         {
           "id": "92d92766-ccd7-48e5-849f-3e90825759ed",
           "type": "AUDIO_CLIP",
@@ -107,7 +107,7 @@
     }
   ],
   "videoProperties": {
-    "duration": 5,
+    "duration": 30000,
     "frameRate": 30,
     "height": 720,
     "width": 1080
