@@ -183,28 +183,28 @@ module.exports = {
 }
 
 
-class Animal {
+// class Animal {
 
-}
+// }
 
-Animal.prototype = {
-  constructor: Animal,
-  __proto__: Object.prototype
-}
+// Animal.prototype = {
+//   constructor: Animal,
+//   __proto__: Object.prototype
+// }
 
-class Dog extends Animal {
+// class Dog extends Animal {
 
-}
+// }
 
-Dog.prototype = {
-  constructor: Dog,
-  __proto__: Animal.prototype
-}
+// Dog.prototype = {
+//   constructor: Dog,
+//   __proto__: Animal.prototype
+// }
 
-const dog = new Dog();
+// const dog = new Dog();
 
-const dog = {
-  __proto__: Dog.prototype
-};
+// const dog = {
+//   __proto__: Dog.prototype
+// };
 
-dog.__proto__ = Dog.prototype;
+// dog.__proto__ = Dog.prototype;

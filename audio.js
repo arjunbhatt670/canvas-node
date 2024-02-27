@@ -156,31 +156,34 @@ const mixAudios = (audios, outputPath, format) =>
 (async () => {
     const start = Date.now();
 
-    const promises = mediaData.tracks.map((track) => {
+    const promises = mediaData.tracks.map(async (track) => {
         /** @type {Clip[]} */
-        const clips = track.clips.map((clip) => ({
-            duration: clip.duration,
-            src: clip.sourceUrl,
-            start: clip.startOffSet,
-            end: clip.endOffSet,
-            trim: clip.trimOffset
-        }));
+        const clips = track.clips
+            .filter(clip => ['VIDEO_CLIP', 'AUDIO_CLIP'].includes(clip.type))
+            .map((clip) => ({
+                duration: clip.duration,
+                src: clip.sourceUrl,
+                start: clip.startOffSet,
+                end: clip.endOffSet,
+                trim: clip.trimOffset
+            }));
 
-        return trimAndJoin(clips, mediaData.videoProperties.duration, `intermediates/${track.id}.mp3`, 'mp3');
+        const audioPath = `intermediates/${track.id}.mp3`;
+
+        if (clips.length) {
+            await trimAndJoin(clips, mediaData.videoProperties.duration, audioPath, 'mp3');
+            return audioPath;
+        }
     });
 
-    await Promise.allSettled(promises);
+    const audioPaths = (await Promise.allSettled(promises)).map(result => result.value).filter(Boolean);
 
-    const createdAudioTracks = mediaData.tracks.map(
-        (track) => `intermediates/${track.id}.mp3`
-    );
+    await mixAudios(audioPaths, "output.mp3", 'mp3');
 
-    await mixAudios(createdAudioTracks, "output.mp3", 'mp3');
+    console.log('time', Date.now() - start);
 
-    console.log('time', Date.now() - start)
-
-    mediaData.tracks.forEach((track) => {
-        fs.unlink(`intermediates/${track.id}.mp3`, (err) => {
+    audioPaths.forEach((path) => {
+        fs.unlink(path, (err) => {
             err ? console.error(err) : console.log("unlinked");
         });
     });

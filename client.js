@@ -111,26 +111,36 @@ async function startDrawing(time, isFramesRequest) {
 }
 
 /** @param {HTMLVideoElement}  video */
-const updateVideoCurrentTime = (video, newTime) => {
+const updateVideoCurrentTime = async (video, newTime) => {
     video.currentTime = newTime;
-    return new Promise((res) => {
-        video.addEventListener('seeked', function seek() {
+    let seek;
+    await new Promise((res) => {
+        seek = () => {
             res();
-            video.removeEventListener(seek);
-        });
+        }
+        video.addEventListener('seeked', seek);
     });
+
+    video.removeEventListener('seeked', seek);
 };
 
 
 async function captureFrameNumber(frameNumber, frameRate) {
     const timeFrame = frameNumber / frameRate;
 
+    let time = Date.now();
+
     await updateVideoCurrentTime(video, timeFrame);
+
+    console.log('seek time', Date.now() - time, 'ms');
+    time = Date.now();
 
     cx.drawImage(video, 0, 0)
 
     cx.fillStyle = "red";
     cx.fillRect(frameNumber % canvas.width, 290, 50, 50);
+
+    console.log('draw time', Date.now() - time, 'ms');
 
 }
 
@@ -229,7 +239,7 @@ async function captureFramesFromCanvas(time) {
 function initCanvas() {
     cx = canvas.getContext("2d");
     video = document.createElement("video");
-    video.src = "./assets/inputVideo.mp4";
+    video.src = "./assets/horses.mp4";
     video.width = 416
     video.height = 240
 }

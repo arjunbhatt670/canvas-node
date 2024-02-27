@@ -6,7 +6,7 @@ const { asyncIterable } = require("../utils");
 
 const frameCapture = async () => {
     console.log("starting");
-    const time = 5;
+    const time = 10;
     const frameRate = 30;
     const totalFrames = time * frameRate
 
@@ -17,7 +17,7 @@ const frameCapture = async () => {
     const page = await puppeteer.init();
 
 
-    await page.goto("http://localhost:5173/");
+    await page.goto("http://localhost:5174/");
 
     const inputStream = new PassThrough();
 
@@ -32,11 +32,11 @@ const frameCapture = async () => {
             frameNum + 1, frameRate
         );
 
-        console.log('frameNum', frameNum)
+        // console.log('frameNum', frameNum)
 
 
         const canvas = await page.$("canvas");
-        const url = await page.evaluate((canvas) => canvas.toDataURL(), canvas);
+        const url = await page.evaluate((canvas) => canvas.toDataURL('image/jpeg', 1), canvas);
         inputStream.write(
             Buffer.from(url.replace("data:image/png;base64,", ""), "base64")
         );
