@@ -5,16 +5,16 @@ const { exec } = require('child_process');
 const fs = require('fs');
 
 
-const { Image } = require('canvas');
+const { Image, ImageData } = require('canvas');
 const Worker = require('worker_threads');
 
 global.Worker = Worker.Worker;
 global.Image = Image;
+global.ImageData = ImageData
 
 const PIXI = require('@pixi/node');
 
 
-const mediaData = require('./api/data2.json');
 const { downloadResource } = require('./utils');
 const frame2Video = require('./frame2Video');
 
@@ -83,6 +83,9 @@ async function downloadMedia(jsonData) {
 
 
 (async () => {
+
+    const mediaData = await fetch("http://localhost:5173/data2.json")
+        .then((value) => value.json())
 
     const assetsDownloadStart = Date.now();
     const config = await downloadMedia(mediaData);
@@ -229,8 +232,13 @@ async function downloadMedia(jsonData) {
 
         app.render();
         const baseData = app.view.toDataURL('image/jpeg', 1);  // 5ms
+        const bufferData = Buffer.from(baseData
+            // .split('base64,')[1]
+            , 'base64');
 
-        inputStream.write(Buffer.from(baseData, 'base64'));  // 0.15ms
+        // fs.writeFileSync(`intermediates/int1_${currentFrame}.jpeg`, bufferData)
+
+        inputStream.write(bufferData);  // 0.15ms
 
         currentFrame++;
     }

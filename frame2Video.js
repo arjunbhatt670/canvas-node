@@ -10,6 +10,7 @@ module.exports = function frame2Video(inputStream, frameRate, outputPath) {
         .inputFPS(frameRate)
         .output(outputPath)
         .videoCodec('libx264')
+        .videoBitrate('1200k')
         .outputOptions([
             '-pix_fmt yuv420p',
         ])

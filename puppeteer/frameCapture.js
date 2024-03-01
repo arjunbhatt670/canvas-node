@@ -1,18 +1,12 @@
 const { PassThrough } = require("stream");
+const fs = require('fs');
 
 
 const Puppeteer = require(".");
 const { asyncIterable } = require("../utils");
 const frame2Video = require("../frame2Video");
-const mediaData = require('../api/data2.json');
 
 (async () => {
-    const time = mediaData.videoProperties.duration;
-    const frameRate = mediaData.videoProperties.frameRate;
-    const totalFrames = (time * frameRate) / 1000
-
-    console.log("Duration of video", time, "ms");
-    console.log("Using frame rate", frameRate, "fps");
 
     const puppeteerLoadStart = Date.now();
     const puppeteer = new Puppeteer();
@@ -20,6 +14,8 @@ const mediaData = require('../api/data2.json');
 
 
     await page.goto("http://localhost:3000/");
+
+    await page.waitForNetworkIdle();
 
     console.log('Time taken by puppeteer to load page', Date.now() - puppeteerLoadStart, 'ms')
 
@@ -30,13 +26,17 @@ const mediaData = require('../api/data2.json');
     const inputElement = await page.$('#currentTimeInput');
     const canvas = await page.$("canvas");
 
+    const duration = await page.evaluate((inputElement) => +inputElement.getAttribute('data-duration'), inputElement);
+    const frameRate = await page.evaluate((inputElement) => +inputElement.getAttribute('data-frame-rate'), inputElement);
+    const totalFrames = (duration * frameRate) / 1000;
+
     for await (const frameNum of asyncIterable(totalFrames)) {
         const timeMoment = ((frameNum + 1) * 1000) / frameRate
         const url = await page.evaluate(
-            function (time, inputElement, canvas) {
+            function (timeMoment, inputElement, canvas) {
                 return new Promise((resolve) => {
                     const event = new Event('change');
-                    inputElement.value = time;
+                    inputElement.value = timeMoment;
 
                     document.addEventListener('canvas-seeked', function seeked() {
                         const dataUrl = canvas.toDataURL('image/jpeg', 1);
