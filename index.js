@@ -1,7 +1,7 @@
 const { createCanvas, loadImage } = require('canvas');
 const { exec } = require('child_process');
 const fs = require('fs');
-const { downloadVideo } = require('./utils');
+const { downloadResource } = require('./utils');
 
 // Canvas setup
 const canvas = createCanvas(800, 600);
@@ -76,7 +76,7 @@ async function renderFrame(frameNumber) {
 // Generate frames function
 async function generateFrames() {
   // Download the video file
-  await downloadVideo(videoUrl, receivedVideoPath);
+  await downloadResource(videoUrl, receivedVideoPath);
 
   await extractFrames(receivedVideoPath, 'frame_%d.png', numFrames);
 

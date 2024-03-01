@@ -7,7 +7,7 @@ module.exports = function Puppeteer() {
     this.init = async () => {
         this.browser = await puppeteer.launch({
             dumpio: true,
-            args: ['--enable-chrome-browser-cloud-management']
+            args: ['--enable-chrome-browser-cloud-management', '--disable-web-security',]
         });
         const page = await this.browser.newPage();
         page

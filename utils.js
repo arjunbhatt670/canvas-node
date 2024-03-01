@@ -3,10 +3,8 @@ const https = require('https');
 const { join } = require('path');
 const { Page } = require('puppeteer');
 const { PassThrough } = require('stream');
-const emptyFunction = async () => { };
-const defaultAfterWritingNewFile = async (filename) => console.log(`${filename} was written`);
 
-async function downloadVideo(url, dest) {
+async function downloadResource(url, dest) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     const request = https.get(url, (response) => {
@@ -39,6 +37,8 @@ class PuppeteerMassScreenshots {
     outputFolder,
     options = {}
   ) {
+    const emptyFunction = async () => { };
+    const defaultAfterWritingNewFile = async (filename) => console.log(`${filename} was written`);
     const runOptions = {
       beforeWritingImageFile: emptyFunction,
       afterWritingImageFile: defaultAfterWritingNewFile,
@@ -96,7 +96,6 @@ class PuppeteerMassScreenshots {
   }
 }
 
-
 const asyncIterable = (times) => ({
   [Symbol.asyncIterator]() {
     let i = 0;
@@ -138,11 +137,6 @@ Function.prototype.myBind = function (obj, ...args) {
   };
 }
 
-
-// function calleeFunction(arg1, arg2) {
-//   console.log(this.fname, 'has these arguments', arg1, arg2);
-// }
-
 Array.prototype.myMap = function (callback) {
   return this.reduce((acc, currentValue, index) => {
     acc.push(callback(currentValue, index));
@@ -172,39 +166,9 @@ Array.prototype.myForEach = function (callback) {
   })
 }
 
-
-
-
 module.exports = {
-  downloadVideo,
+  downloadResource,
   getFilesCountIn,
   PuppeteerMassScreenshots,
   asyncIterable
 }
-
-
-// class Animal {
-
-// }
-
-// Animal.prototype = {
-//   constructor: Animal,
-//   __proto__: Object.prototype
-// }
-
-// class Dog extends Animal {
-
-// }
-
-// Dog.prototype = {
-//   constructor: Dog,
-//   __proto__: Animal.prototype
-// }
-
-// const dog = new Dog();
-
-// const dog = {
-//   __proto__: Dog.prototype
-// };
-
-// dog.__proto__ = Dog.prototype;

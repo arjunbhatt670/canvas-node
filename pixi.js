@@ -2,23 +2,21 @@ const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
 const { PassThrough } = require('stream');
 const { exec } = require('child_process');
+const fs = require('fs');
 
 
-const { WebGLRenderingContext } = require('gl')
-const { Canvas, Image, CanvasRenderingContext2D, ImageData } = require('canvas');
+const { Image } = require('canvas');
 const Worker = require('worker_threads');
 
 global.Worker = Worker.Worker;
-global.WebGLRenderingContext = WebGLRenderingContext
-global.CanvasRenderingContext2D = CanvasRenderingContext2D
-global.ImageData = ImageData
-global.Canvas = Canvas;
 global.Image = Image;
 
-
 const PIXI = require('@pixi/node');
-const fs = require('fs');
-const mediaData = require('./data.json');
+
+
+const mediaData = require('./api/data2.json');
+const { downloadResource } = require('./utils');
+const frame2Video = require('./frame2Video');
 
 function getFrame({ frame = '%d', format, dir, frameName }) {
     return [dir, `${frameName}_frame%d.${format}`].filter(Boolean).join('/').replace('%d', frame)
@@ -61,16 +59,43 @@ async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRat
     })
 }
 
+/**
+ * @param {Media} jsonData 
+ * @returns {Promise<Media>}
+ */
+async function downloadMedia(jsonData) {
+    for (const track of jsonData.tracks) {
+        for (const clip of track.clips) {
+            if (clip.sourceUrl) {
+                const fileName = `${clip.id}.${/[^.]+$/.exec(clip.sourceUrl)[0]}`; // Change file extension based on resource type
+                const filePath = 'assets/' + fileName;
+                if (!fs.existsSync(filePath)) {
+                    await downloadResource(clip.sourceUrl, filePath);
+                }
+                clip.sourceUrl = filePath;
+            }
+        }
+    }
+
+    return jsonData;
+}
+
+
 
 (async () => {
-    const videoClips = mediaData.tracks.map((track) => track.clips.map((clip) => clip.type === 'VIDEO_CLIP' ? clip : null)).flat(1).filter(Boolean);
+
+    const assetsDownloadStart = Date.now();
+    const config = await downloadMedia(mediaData);
+    console.log('Media assets download time', Date.now() - assetsDownloadStart, 'ms');
+
+    const videoClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'VIDEO_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
     const extractStart = Date.now();
     const promises = videoClips.map((clip) => {
         return extractFrames(clip.sourceUrl, {
             duration: clip.duration / 1000,
-            startTime: clip.trimOffset / 1000,
-            frameRate: mediaData.videoProperties.frameRate,
+            startTime: (clip.trimOffset || 0) / 1000,
+            frameRate: config.videoProperties.frameRate,
             dir: 'intermediates',
             frameName: clip.id,
             height: clip.coordinates.height,
@@ -82,7 +107,7 @@ async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRat
     console.log('Video frames extraction time', Date.now() - extractStart, 'ms');
 
 
-    const shapeClips = mediaData.tracks.map((track) => track.clips.map((clip) => clip.type === 'SHAPE_CLIP' ? clip : null)).flat(1).filter(Boolean);
+    const shapeClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'SHAPE_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
     const shapeExtractStart = Date.now();
     shapeClips.map((clip) => {
@@ -90,8 +115,7 @@ async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRat
     })
     console.log('Shapes extraction time', Date.now() - shapeExtractStart, 'ms');
 
-
-    const imageClips = mediaData.tracks.map((track) => track.clips.map((clip) => clip.type === 'IMAGE_CLIP' ? clip : null)).flat(1).filter(Boolean);
+    const imageClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'IMAGE_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
     const imageExtractStart = Date.now();
     imageClips.map((clip) => {
@@ -99,11 +123,12 @@ async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRat
     })
     console.log('images extraction time', Date.now() - imageExtractStart, 'ms');
 
-    const totalFrames = (mediaData.videoProperties.duration * mediaData.videoProperties.frameRate) / 1000;
+
+    const totalFrames = (config.videoProperties.duration * config.videoProperties.frameRate) / 1000;
 
     const app = new PIXI.Application({
-        width: mediaData.videoProperties.width,
-        height: mediaData.videoProperties.height,
+        width: config.videoProperties.width,
+        height: config.videoProperties.height,
         hello: true
     });
 
@@ -114,9 +139,9 @@ async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRat
         skipDetections: true
     });
 
-    console.time('Video frames load time')
+    const assetLoadStart = Date.now();
     await PIXI.Assets.load(fs.readdirSync('intermediates'))
-    console.timeEnd('Video frames load time')
+    console.log('Video frames load time', Date.now() - assetLoadStart, 'ms')
 
 
     const inputStream = new PassThrough();
@@ -127,15 +152,15 @@ async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRat
     const statics = new Map();
 
     while (currentFrame <= totalFrames) {
-        const currentTime = (currentFrame * 1000) / mediaData.videoProperties.frameRate;
-        const clips = getVisibleObjects(currentTime);
+        const currentTime = (currentFrame * 1000) / config.videoProperties.frameRate;
+        const clips = getVisibleObjects(config, currentTime);
 
         const container = new PIXI.Container();
         app.stage = container;
 
         for (let clipIndex = 0; clipIndex < clips.length; clipIndex++) { // 5ms
             const clip = clips[clipIndex];
-            const clipStartFrame = (clip.startOffSet * mediaData.videoProperties.frameRate) / 1000;
+            const clipStartFrame = (clip.startOffSet * config.videoProperties.frameRate) / 1000;
 
             switch (clip.type) {
                 case 'VIDEO_CLIP': {
@@ -213,38 +238,23 @@ async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRat
     app.destroy();
 
     const pixiEnd = Date.now();
+    console.log('Processed', totalFrames, 'frames.');
     console.log("pixi/node drawing time spent of all frames", pixiEnd - pixiStart, 'ms')
 
     inputStream.end();
 
     exec('rm -rf intermediates/**_frame**.png');
 
-
-    const command = ffmpeg();
-    command.setFfmpegPath(ffmpegPath);
-    let ffmpegStartTime
-    command.input(inputStream);
-    command.inputFPS(mediaData.videoProperties.frameRate);
-    command.output('output.mp4').fpsOutput(mediaData.videoProperties.frameRate).on('start', () => {
-        ffmpegStartTime = Date.now();
-        console.log('ffmpeg process started');
-    })
-        .on('error', (err, stdout, stderr) => {
-            console.error('ffmpeg error:', err.message);
-            console.error('ffmpeg stderr:', stderr);
-        })
-        .on('end', () => {
-            console.log('ffmpeg video conversion time spent', Date.now() - ffmpegStartTime, 'ms');
-            command.input('output.mp4').ffprobe(function (err, metadata) {
-                console.log('Duration of video', metadata.format.duration, 'seconds');
-            });
-        })
-        .run()
+    frame2Video(inputStream, config.videoProperties.frameRate, 'output.mp4');
 })();
 
-
-function getVisibleObjects(timeInstance) {
-    return mediaData.tracks
+/**
+ * @param {Media} config 
+ * @param {number} timeInstance 
+ * @returns {DataClip[]}
+ */
+function getVisibleObjects(config, timeInstance) {
+    return config.tracks
         .map((track) =>
             track.clips
                 .sort((clip1, clip2) => clip1.startOffSet - clip2.startOffSet)

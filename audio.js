@@ -2,7 +2,7 @@ const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
 
-const mediaData = require("./data.json");
+const mediaData = require("./api/data.json");
 
 /**
  * @param {Clip[]} clips
