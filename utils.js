@@ -3,6 +3,8 @@ const https = require('https');
 const { join } = require('path');
 const { Page } = require('puppeteer');
 const { PassThrough } = require('stream');
+const crypto = require('crypto');
+const ffmpeg = require("fluent-ffmpeg");
 
 async function downloadResource(url, dest) {
   return new Promise((resolve, reject) => {
@@ -113,6 +115,51 @@ const asyncIterable = (times) => ({
   },
 });
 
+const hashString = async (str) => {
+  // Use SHA-256 hashing algorithm
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * @param {Media} jsonData 
+ * @returns {Promise<Media>}
+ */
+async function downloadMedia(jsonData) {
+  for (const track of jsonData.tracks) {
+    for (const clip of track.clips) {
+      if (clip.sourceUrl) {
+        const fileName = `${clip.id}.${/[^.]+$/.exec(clip.sourceUrl)[0]}`; // Change file extension based on resource type
+        const filePath = 'assets/' + fileName;
+        if (!fs.existsSync(filePath)) {
+          await downloadResource(clip.sourceUrl, filePath);
+        }
+        clip.sourceUrl = filePath;
+      }
+    }
+  }
+
+  return jsonData;
+}
+
+/**
+ * @param {string[]} audioPaths
+ */
+async function calculateMaxAudioChannels(audioPaths) {
+  return Math.max(
+    ...(await Promise.allSettled(
+      audioPaths.map(
+        async (audio) =>
+          new Promise((res) =>
+            ffmpeg.ffprobe(audio, (_, data) =>
+              res(data.streams.find(stream => stream.codec_type === 'audio')?.channels)
+            )
+          )
+      )
+    )).map((result) => result.value)
+  )
+}
+
 Function.prototype.myCall = function (obj, ...args) {
   const sym = Symbol();
   const obj2 = obj;
@@ -170,5 +217,8 @@ module.exports = {
   downloadResource,
   getFilesCountIn,
   PuppeteerMassScreenshots,
-  asyncIterable
+  asyncIterable,
+  hashString,
+  downloadMedia,
+  calculateMaxAudioChannels
 }

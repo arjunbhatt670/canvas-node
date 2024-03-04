@@ -1,8 +1,7 @@
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
-
-const mediaData = require("./api/data.json");
+const { downloadMedia, calculateMaxAudioChannels } = require("./utils");
 
 /**
  * @param {Clip[]} clips
@@ -10,14 +9,15 @@ const mediaData = require("./api/data.json");
  * @param {fs.WriteStream} stream
  * @returns {Promise<fs.WriteStream>}
  */
-const trimAndJoin = (clips = [], totalDuration, outputPath, format) =>
-    new Promise((resolve, reject) => {
+const trimAndJoin = async (clips = [], totalDuration, outputPath, format) => {
+    const finalAudioChannels = await calculateMaxAudioChannels(clips.map(clip => clip.src));
+
+    return new Promise((resolve, reject) => {
         const stream = fs.createWriteStream(outputPath);
         const ffmpegCommand = ffmpeg();
         ffmpegCommand.setFfmpegPath(ffmpegPath);
         ffmpegCommand
-            .on("end", (_, stdout) => {
-                console.log(stdout);
+            .on("end", () => {
                 console.log("trim and join finished");
                 resolve(stream);
             })
@@ -26,11 +26,11 @@ const trimAndJoin = (clips = [], totalDuration, outputPath, format) =>
                 reject(err);
             });
 
+        clips.sort((clip1, clip2) => clip1.start - clip2.start);
+
         clips.forEach((clip) => {
             ffmpegCommand.input(clip.src);
         });
-
-        clips.sort((clip1, clip2) => clip1.start - clip2.start);
 
         /** @type {ffmpeg.FilterSpecification[]} */
         const filters = [];
@@ -107,26 +107,28 @@ const trimAndJoin = (clips = [], totalDuration, outputPath, format) =>
         ffmpegCommand.complexFilter(filters);
 
         // convert to stereo
-        ffmpegCommand.audioChannels(2);
+        ffmpegCommand.audioChannels(finalAudioChannels);
 
         ffmpegCommand
             .outputOptions([`-f ${format}`])
             .pipe(stream)
     });
+};
 
 /**
  * @param {(string| Readable)[]} audios
  * @param {fs.WriteStream} stream
  * @returns {Promise<void>}
  */
-const mixAudios = (audios, outputPath, format) =>
-    new Promise((resolve, reject) => {
+const mixAudios = async (audios, outputPath, format) => {
+    const finalAudioChannels = await calculateMaxAudioChannels(audios);
+
+    return new Promise((resolve, reject) => {
         const stream = fs.createWriteStream(outputPath);
         const ffmpegCommand = ffmpeg();
         ffmpegCommand.setFfmpegPath(ffmpegPath);
         ffmpegCommand
-            .on("end", (_, stdout) => {
-                console.log(stdout);
+            .on("end", () => {
                 console.log("Mix finished");
                 resolve(stream);
             })
@@ -146,17 +148,24 @@ const mixAudios = (audios, outputPath, format) =>
         });
 
         // convert to stereo
-        ffmpegCommand.audioChannels(2);
+        ffmpegCommand.audioChannels(finalAudioChannels);
 
         ffmpegCommand
             .outputOptions([`-f ${format}`])
             .pipe(stream);
     });
+}
 
 (async () => {
+    const mediaData = await fetch("http://localhost:5173/data2.json").then(
+        (value) => value.json()
+    );
+
+    const config = await downloadMedia(mediaData);
+
     const start = Date.now();
 
-    const promises = mediaData.tracks.map(async (track) => {
+    const promises = config.tracks.map(async (track) => {
         /** @type {Clip[]} */
         const clips = track.clips
             .filter(clip => ['VIDEO_CLIP', 'AUDIO_CLIP'].includes(clip.type))
@@ -165,7 +174,7 @@ const mixAudios = (audios, outputPath, format) =>
                 src: clip.sourceUrl,
                 start: clip.startOffSet,
                 end: clip.endOffSet,
-                trim: clip.trimOffset
+                trim: clip.trimOffset || 0,
             }));
 
         const audioPath = `intermediates/${track.id}.mp3`;
@@ -179,6 +188,11 @@ const mixAudios = (audios, outputPath, format) =>
     const audioPaths = (await Promise.allSettled(promises)).map(result => result.value).filter(Boolean);
 
     await mixAudios(audioPaths, "output.mp3", 'mp3');
+
+    ffmpeg.ffprobe('output.mp3', (_, data) => console.log('Final Audio properties', {
+        time: data.format.duration,
+        channel_name: data.streams[0].channel_layout,
+    }))
 
     console.log('time', Date.now() - start);
 

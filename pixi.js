@@ -1,5 +1,3 @@
-const ffmpeg = require('fluent-ffmpeg')
-const ffmpegPath = require('ffmpeg-static');
 const { PassThrough } = require('stream');
 const { exec } = require('child_process');
 const fs = require('fs');
@@ -15,71 +13,13 @@ global.ImageData = ImageData
 const PIXI = require('@pixi/node');
 
 
-const { downloadResource } = require('./utils');
 const frame2Video = require('./frame2Video');
+const video2Frame = require('./video2Frame');
+const { downloadMedia } = require('./utils');
 
 function getFrame({ frame = '%d', format, dir, frameName }) {
     return [dir, `${frameName}_frame%d.${format}`].filter(Boolean).join('/').replace('%d', frame)
 }
-
-async function extractFrames(inputVideoPath, { startTime = 0, duration, frameRate, width, height, outputFormat = 'png', dir, frameName }) {
-    const outputPath = getFrame({ dir, format: outputFormat, frameName });
-    await new Promise((res, rej) => exec(`rm -rf ${outputPath.replace('%d', '**')}`, (err) => err ? rej(err) : res()));
-
-
-    return new Promise((resolve) => {
-        const ffmpegCommand = ffmpeg();
-        ffmpegCommand.setFfmpegPath(ffmpegPath);
-
-        ffmpegCommand
-            .input(inputVideoPath)
-            .inputOptions([
-                `-ss ${startTime}`,
-                `-t ${duration}`
-            ])
-            .output(outputPath)
-            .outputOptions([
-                `-r ${frameRate}`,
-                `-vf fps=${frameRate}`,
-                `-vf scale=${width ?? -1}:${height ?? -1}`,
-                `-vframes ${frameRate * duration}`,
-                // '-f image2pipe',
-                // '-c:v png',
-                // '-c:v libx264'
-            ])
-            .on('start', () => {
-                console.log('frame extraction for', inputVideoPath, 'started');
-            }).on('end', () => {
-                console.log('frame extraction for', inputVideoPath, 'completed');
-                resolve();
-            }).on('error', (err, stderr, stdout) => {
-                console.error('ffmpeg error:', err.message, stdout);
-            })
-            .run();
-    })
-}
-
-/**
- * @param {Media} jsonData 
- * @returns {Promise<Media>}
- */
-async function downloadMedia(jsonData) {
-    for (const track of jsonData.tracks) {
-        for (const clip of track.clips) {
-            if (clip.sourceUrl) {
-                const fileName = `${clip.id}.${/[^.]+$/.exec(clip.sourceUrl)[0]}`; // Change file extension based on resource type
-                const filePath = 'assets/' + fileName;
-                if (!fs.existsSync(filePath)) {
-                    await downloadResource(clip.sourceUrl, filePath);
-                }
-                clip.sourceUrl = filePath;
-            }
-        }
-    }
-
-    return jsonData;
-}
-
 
 
 (async () => {
@@ -94,15 +34,17 @@ async function downloadMedia(jsonData) {
     const videoClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'VIDEO_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
     const extractStart = Date.now();
-    const promises = videoClips.map((clip) => {
-        return extractFrames(clip.sourceUrl, {
+    const promises = videoClips.map(async (clip) => {
+        const frameOutputPath = getFrame({ dir: 'intermediates', format: 'png', frameName: clip.id });
+
+        await new Promise((res, rej) => exec(`rm -rf ${frameOutputPath.replace('%d', '**')}`, (err) => err ? rej(err) : res()));
+
+        return video2Frame(clip.sourceUrl, frameOutputPath, {
             duration: clip.duration / 1000,
             startTime: (clip.trimOffset || 0) / 1000,
             frameRate: config.videoProperties.frameRate,
-            dir: 'intermediates',
-            frameName: clip.id,
             height: clip.coordinates.height,
-            width: clip.coordinates.width
+            width: clip.coordinates.width,
         });
     });
 
