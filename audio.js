@@ -2,6 +2,7 @@ const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
 const { downloadMedia, calculateMaxAudioChannels } = require("./utils");
+const { tmpDir } = require("./path");
 
 /**
  * @param {Clip[]} clips
@@ -157,13 +158,13 @@ const mixAudios = async (audios, outputPath, format) => {
 }
 
 (async () => {
-    const mediaData = await fetch("http://localhost:5173/data2.json").then(
+    const mediaData = await fetch("http://localhost:5173/data60.json").then(
         (value) => value.json()
     );
 
-    const config = await downloadMedia(mediaData);
+    const config = await downloadMedia(mediaData, true);
 
-    const start = Date.now();
+    let start = Date.now();
 
     const promises = config.tracks.map(async (track) => {
         /** @type {Clip[]} */
@@ -177,7 +178,7 @@ const mixAudios = async (audios, outputPath, format) => {
                 trim: clip.trimOffset || 0,
             }));
 
-        const audioPath = `intermediates/${track.id}.mp3`;
+        const audioPath = `${tmpDir}/${track.id}.mp3`;
 
         if (clips.length) {
             await trimAndJoin(clips, mediaData.videoProperties.duration, audioPath, 'mp3');
@@ -187,14 +188,18 @@ const mixAudios = async (audios, outputPath, format) => {
 
     const audioPaths = (await Promise.allSettled(promises)).map(result => result.value).filter(Boolean);
 
+    console.log('Merging time', Date.now() - start);
+    start = Date.now();
+
     await mixAudios(audioPaths, "output.mp3", 'mp3');
+
+    console.log('Mixing time', Date.now() - start);
 
     ffmpeg.ffprobe('output.mp3', (_, data) => console.log('Final Audio properties', {
         time: data.format.duration,
         channel_name: data.streams[0].channel_layout,
     }))
 
-    console.log('time', Date.now() - start);
 
     audioPaths.forEach((path) => {
         fs.unlink(path, (err) => {

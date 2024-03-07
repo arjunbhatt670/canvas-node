@@ -14,49 +14,28 @@ const PIXI = require('@pixi/node');
 
 
 const frame2Video = require('./frame2Video');
-const video2Frame = require('./video2Frame');
-const { downloadMedia } = require('./utils');
-
-function getFrame({ frame = '%d', format, dir, frameName }) {
-    return [dir, `${frameName}_frame%d.${format}`].filter(Boolean).join('/').replace('%d', frame)
-}
+const { downloadMedia, getFramePath } = require('./utils');
+const { tmpDir } = require('./path');
+const { extractVideoFrames, getVisibleObjects } = require('./pixiUtils');
 
 
 (async () => {
 
-    const mediaData = await fetch("http://localhost:5173/data2.json")
+    const mediaData = await fetch("http://localhost:5173/data60.json")
         .then((value) => value.json())
 
     const assetsDownloadStart = Date.now();
-    const config = await downloadMedia(mediaData);
+    const config = await downloadMedia(mediaData, true);
     console.log('Media assets download time', Date.now() - assetsDownloadStart, 'ms');
 
-    const videoClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'VIDEO_CLIP' ? clip : null)).flat(1).filter(Boolean);
-
-    const extractStart = Date.now();
-    const promises = videoClips.map(async (clip) => {
-        const frameOutputPath = getFrame({ dir: 'intermediates', format: 'png', frameName: clip.id });
-
-        await new Promise((res, rej) => exec(`rm -rf ${frameOutputPath.replace('%d', '**')}`, (err) => err ? rej(err) : res()));
-
-        return video2Frame(clip.sourceUrl, frameOutputPath, {
-            duration: clip.duration / 1000,
-            startTime: (clip.trimOffset || 0) / 1000,
-            frameRate: config.videoProperties.frameRate,
-            height: clip.coordinates.height,
-            width: clip.coordinates.width,
-        });
-    });
-
-    await Promise.allSettled(promises);
-    console.log('Video frames extraction time', Date.now() - extractStart, 'ms');
+    await extractVideoFrames(config);
 
 
     const shapeClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'SHAPE_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
     const shapeExtractStart = Date.now();
     shapeClips.map((clip) => {
-        fs.writeFileSync(`intermediates/${clip.id}.png`, Buffer.from(clip.shapeInfo.shapeMediaUrl.split('base64,')[1], 'base64url'))
+        fs.writeFileSync(`${tmpDir}/${clip.id}.png`, Buffer.from(clip.shapeInfo.shapeMediaUrl.split('base64,')[1], 'base64url'))
     })
     console.log('Shapes extraction time', Date.now() - shapeExtractStart, 'ms');
 
@@ -64,7 +43,7 @@ function getFrame({ frame = '%d', format, dir, frameName }) {
 
     const imageExtractStart = Date.now();
     imageClips.map((clip) => {
-        fs.writeFileSync(`intermediates/${clip.id}.png`, fs.readFileSync(clip.sourceUrl));
+        fs.writeFileSync(`${tmpDir}/${clip.id}.png`, fs.readFileSync(clip.sourceUrl));
     })
     console.log('images extraction time', Date.now() - imageExtractStart, 'ms');
 
@@ -80,12 +59,12 @@ function getFrame({ frame = '%d', format, dir, frameName }) {
     app.renderer.background.color = '#ffffff';
 
     await PIXI.Assets.init({
-        basePath: 'intermediates',
+        basePath: tmpDir,
         skipDetections: true
     });
 
     const assetLoadStart = Date.now();
-    await PIXI.Assets.load(fs.readdirSync('intermediates'))
+    await PIXI.Assets.load(fs.readdirSync(tmpDir))
     console.log('Video frames load time', Date.now() - assetLoadStart, 'ms')
 
 
@@ -110,7 +89,7 @@ function getFrame({ frame = '%d', format, dir, frameName }) {
             switch (clip.type) {
                 case 'VIDEO_CLIP': {
                     try {
-                        const videoFramePath = getFrame({
+                        const videoFramePath = getFramePath({
                             frame: currentFrame + 1 - clipStartFrame,
                             format: 'png',
                             frameName: clip.id
@@ -193,41 +172,7 @@ function getFrame({ frame = '%d', format, dir, frameName }) {
 
     inputStream.end();
 
-    exec('rm -rf intermediates/**_frame**.png');
+    exec(`rm -rf ${tmpDir}/**_frame**.png`);
 
-    frame2Video(inputStream, config.videoProperties.frameRate, 'output.mp4');
+    frame2Video(inputStream, config.videoProperties.frameRate, 'output2.mp4');
 })();
-
-/**
- * @param {Media} config 
- * @param {number} timeInstance 
- * @returns {DataClip[]}
- */
-function getVisibleObjects(config, timeInstance) {
-    return config.tracks
-        .map((track) =>
-            track.clips
-                .sort((clip1, clip2) => clip1.startOffSet - clip2.startOffSet)
-        )
-        .flat(1)
-        .filter((clip) =>
-        (clip.type !== 'AUDIO_CLIP'
-            && clip.startOffSet <= timeInstance
-            && timeInstance < (clip.startOffSet + clip.duration)));
-}
-
-
-// extractFrames('./assets/dragon.mp4', {
-//     duration: 2,
-//     startTime: 0,
-//     width: 720,
-//     frameRate: 20,
-//     outputFormat: 'png',
-//     dir: 'intermediates',
-//     frameName: 'inputVideo',
-// });
-
-
-
-
-// ffmpeg -i filename 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"

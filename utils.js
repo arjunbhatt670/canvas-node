@@ -125,13 +125,13 @@ const hashString = async (str) => {
  * @param {Media} jsonData 
  * @returns {Promise<Media>}
  */
-async function downloadMedia(jsonData) {
+async function downloadMedia(jsonData, noCache = false) {
   for (const track of jsonData.tracks) {
     for (const clip of track.clips) {
       if (clip.sourceUrl) {
         const fileName = `${clip.id}.${/[^.]+$/.exec(clip.sourceUrl)[0]}`; // Change file extension based on resource type
         const filePath = 'assets/' + fileName;
-        if (!fs.existsSync(filePath)) {
+        if (!fs.existsSync(filePath) || noCache) {
           await downloadResource(clip.sourceUrl, filePath);
         }
         clip.sourceUrl = filePath;
@@ -158,6 +158,10 @@ async function calculateMaxAudioChannels(audioPaths) {
       )
     )).map((result) => result.value)
   )
+}
+
+function getFramePath({ frame = '%d', format, dir, frameName }) {
+  return [dir, `${frameName}_frame%d.${format}`].filter(Boolean).join('/').replace('%d', frame)
 }
 
 Function.prototype.myCall = function (obj, ...args) {
@@ -220,5 +224,6 @@ module.exports = {
   asyncIterable,
   hashString,
   downloadMedia,
-  calculateMaxAudioChannels
+  calculateMaxAudioChannels,
+  getFramePath
 }

@@ -55,6 +55,7 @@
           "startOffSet": 0,
           "duration": 2000,
           "endOffSet": 2000,
+          "trimOffset": 10000,
           "coordinates": {
             "x": 1,
             "y": -2,
@@ -75,8 +76,9 @@
         {
           "id": "2ca83020-3d13-46eb-bba9-fac4a2b0767d",
           "type": "VIDEO_CLIP",
-          "startOffSet": 2000,
-          "duration": 2000,
+          "startOffSet": 0,
+          "duration": 120000,
+          "trimOffset": 0,
           "endOffSet": 4000,
           "coordinates": {
             "x": 6,
@@ -84,7 +86,7 @@
             "width": 180,
             "height": 180
           },
-          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/cfe5846a-0fa6-481b-9cc5-d4b9037ced9e-2043898115/Enel_Green_Power_Azure_Sky_Win.mp4",
+          "sourceUrl": "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_30mb.mp4",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -118,7 +120,7 @@
     }
   ],
   "videoProperties": {
-    "duration": 10000,
+    "duration": 120000,
     "frameRate": 30,
     "height": 360,
     "width": 640

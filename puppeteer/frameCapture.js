@@ -15,13 +15,24 @@ const frame2Video = require("../frame2Video");
 
     await page.goto("http://localhost:3000/");
 
-    await page.waitForNetworkIdle();
-
     console.log('Time taken by puppeteer to load page', Date.now() - puppeteerLoadStart, 'ms')
 
     const inputStream = new PassThrough();
-    const startTime = Date.now();
 
+    const assetsLoadStart = Date.now();
+
+    await page.evaluate(function () {
+        return new Promise((resolve) => {
+            document.addEventListener('assets-loaded', function loaded() {
+                resolve();
+                document.removeEventListener('assets-loaded', loaded);
+            })
+        });
+    });
+
+    console.log('Time taken by puppeteer to load assets', Date.now() - assetsLoadStart, 'ms')
+
+    const startTime = Date.now();
     /** @type {HTMLInputElement} */
     const inputElement = await page.$('#currentTimeInput');
     const canvas = await page.$("canvas");
