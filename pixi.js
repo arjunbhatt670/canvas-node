@@ -2,40 +2,30 @@ const { PassThrough } = require('stream');
 const { exec } = require('child_process');
 const fs = require('fs');
 
-
-const { Image, ImageData } = require('canvas');
-const Worker = require('worker_threads');
-
-global.Worker = Worker.Worker;
-global.Image = Image;
-global.ImageData = ImageData
-
-const PIXI = require('@pixi/node');
-
-
+const PIXI = require('./pixi-node');
 const frame2Video = require('./frame2Video');
-const { downloadMedia, getFramePath } = require('./utils');
+const { getFramePath } = require('./utils');
 const { tmpDir } = require('./path');
-const { extractVideoFrames, getVisibleObjects } = require('./pixiUtils');
+const { getVisibleObjects, extractVideoFrames } = require('./pixiUtils');
+const { getConfig } = require('./service');
 
 
 (async () => {
+    const tempPaths = [];
 
-    const mediaData = await fetch("http://localhost:5173/data60.json")
-        .then((value) => value.json())
+    const config = await getConfig();
 
-    const assetsDownloadStart = Date.now();
-    const config = await downloadMedia(mediaData, true);
-    console.log('Media assets download time', Date.now() - assetsDownloadStart, 'ms');
+    const videoFramesTempPath = await extractVideoFrames(config);
 
-    await extractVideoFrames(config);
-
+    tempPaths.push(videoFramesTempPath);
 
     const shapeClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'SHAPE_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
     const shapeExtractStart = Date.now();
     shapeClips.map((clip) => {
-        fs.writeFileSync(`${tmpDir}/${clip.id}.png`, Buffer.from(clip.shapeInfo.shapeMediaUrl.split('base64,')[1], 'base64url'))
+        const path = `${tmpDir}/${clip.id}.png`;
+        tempPaths.push(path);
+        fs.writeFileSync(path, Buffer.from(clip.shapeInfo.shapeMediaUrl.split('base64,')[1], 'base64url'))
     })
     console.log('Shapes extraction time', Date.now() - shapeExtractStart, 'ms');
 
@@ -43,7 +33,9 @@ const { extractVideoFrames, getVisibleObjects } = require('./pixiUtils');
 
     const imageExtractStart = Date.now();
     imageClips.map((clip) => {
-        fs.writeFileSync(`${tmpDir}/${clip.id}.png`, fs.readFileSync(clip.sourceUrl));
+        const path = `${tmpDir}/${clip.id}.png`;
+        tempPaths.push(path);
+        fs.copyFileSync(clip.sourceUrl, path);
     })
     console.log('images extraction time', Date.now() - imageExtractStart, 'ms');
 
@@ -53,7 +45,8 @@ const { extractVideoFrames, getVisibleObjects } = require('./pixiUtils');
     const app = new PIXI.Application({
         width: config.videoProperties.width,
         height: config.videoProperties.height,
-        hello: true
+        hello: true,
+        antialias: true
     });
 
     app.renderer.background.color = '#ffffff';
@@ -65,7 +58,7 @@ const { extractVideoFrames, getVisibleObjects } = require('./pixiUtils');
 
     const assetLoadStart = Date.now();
     await PIXI.Assets.load(fs.readdirSync(tmpDir))
-    console.log('Video frames load time', Date.now() - assetLoadStart, 'ms')
+    console.log('Assets loaded in pixi cache took', Date.now() - assetLoadStart, 'ms')
 
 
     const inputStream = new PassThrough();
@@ -76,7 +69,7 @@ const { extractVideoFrames, getVisibleObjects } = require('./pixiUtils');
     const statics = new Map();
 
     while (currentFrame <= totalFrames) {
-        const currentTime = (currentFrame * 1000) / config.videoProperties.frameRate;
+        const currentTime = ((currentFrame - 1) * 1000) / config.videoProperties.frameRate;
         const clips = getVisibleObjects(config, currentTime);
 
         const container = new PIXI.Container();
@@ -90,7 +83,7 @@ const { extractVideoFrames, getVisibleObjects } = require('./pixiUtils');
                 case 'VIDEO_CLIP': {
                     try {
                         const videoFramePath = getFramePath({
-                            frame: currentFrame + 1 - clipStartFrame,
+                            frame: currentFrame - clipStartFrame,
                             format: 'png',
                             frameName: clip.id
                         });
@@ -168,11 +161,14 @@ const { extractVideoFrames, getVisibleObjects } = require('./pixiUtils');
 
     const pixiEnd = Date.now();
     console.log('Processed', totalFrames, 'frames.');
-    console.log("pixi/node drawing time spent of all frames", pixiEnd - pixiStart, 'ms')
+    console.log("Drawing took", pixiEnd - pixiStart, 'ms')
 
     inputStream.end();
 
-    exec(`rm -rf ${tmpDir}/**_frame**.png`);
+    /** Remove temp files */
+    tempPaths.forEach((path) => {
+        exec(`rm -rf ${path}`);
+    })
 
     frame2Video(inputStream, config.videoProperties.frameRate, 'output2.mp4');
 })();

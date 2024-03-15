@@ -6,6 +6,7 @@ const { tmpDir } = require('./path');
 
 /**
  * @param {Media} config 
+ * @returns {Promise<string>} Temporary files path regex
  */
 const extractVideoFrames = async (config) => {
     const videoClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'VIDEO_CLIP' ? clip : null)).flat(1).filter(Boolean);
@@ -26,7 +27,14 @@ const extractVideoFrames = async (config) => {
     });
 
     await Promise.allSettled(promises);
-    console.log('Video frames extraction time', Date.now() - extractStart, 'ms');
+    console.log('Video frames extraction took', Date.now() - extractStart, 'ms');
+
+    return getFramePath({
+        dir: tmpDir,
+        format: 'png',
+        frameName: '**',
+        frame: '**'
+    });
 }
 
 /**
