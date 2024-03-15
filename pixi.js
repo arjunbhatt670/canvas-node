@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const PIXI = require('./pixi-node');
 const frame2Video = require('./frame2Video');
-const { getFramePath } = require('./utils');
+const { getFramePath, Url } = require('./utils');
 const { tmpDir } = require('./path');
 const { getVisibleObjects, extractVideoFrames } = require('./pixiUtils');
 const { getConfig } = require('./service');
@@ -12,10 +12,11 @@ const { getConfig } = require('./service');
 
 (async () => {
     const tempPaths = [];
+    const imgType = 'png';
 
     const config = await getConfig();
 
-    const videoFramesTempPath = await extractVideoFrames(config);
+    const videoFramesTempPath = await extractVideoFrames(config, imgType);
 
     tempPaths.push(videoFramesTempPath);
 
@@ -33,7 +34,7 @@ const { getConfig } = require('./service');
 
     const imageExtractStart = Date.now();
     imageClips.map((clip) => {
-        const path = `${tmpDir}/${clip.id}.png`;
+        const path = `${tmpDir}/${clip.id}.${Url(clip.sourceUrl).getExt()}`;
         tempPaths.push(path);
         fs.copyFileSync(clip.sourceUrl, path);
     })
@@ -84,7 +85,7 @@ const { getConfig } = require('./service');
                     try {
                         const videoFramePath = getFramePath({
                             frame: currentFrame - clipStartFrame,
-                            format: 'png',
+                            format: imgType,
                             frameName: clip.id
                         });
 
@@ -127,7 +128,7 @@ const { getConfig } = require('./service');
                     if (statics.has(clip)) {
                         container.addChild(statics.get(clip));
                     } else {
-                        const img = await PIXI.Assets.load(`${clip.id}.png`);
+                        const img = await PIXI.Assets.load(`${clip.id}.${Url(clip.sourceUrl).getExt()}`);
 
                         const sprite = PIXI.Sprite.from(img);
                         sprite.x = clip.coordinates.x;

@@ -1,7 +1,6 @@
 const fs = require('fs');
 const https = require('https');
 const { join } = require('path');
-const { Page } = require('puppeteer');
 const { PassThrough } = require('stream');
 const crypto = require('crypto');
 const ffmpeg = require("fluent-ffmpeg");
@@ -34,7 +33,6 @@ const getFilesCountIn = (dir) => {
 
 class PuppeteerMassScreenshots {
   async init(
-    /** @type {Page} */
     page,
     outputFolder,
     options = {}
@@ -129,7 +127,7 @@ async function downloadMedia(jsonData, noCache = false) {
   for (const track of jsonData.tracks) {
     for (const clip of track.clips) {
       if (clip.sourceUrl) {
-        const fileName = `${clip.id}.${/[^.]+$/.exec(clip.sourceUrl)[0]}`; // Change file extension based on resource type
+        const fileName = `${clip.id}.${Url(clip.sourceUrl).getExt()}`; // Change file extension based on resource type
         const filePath = 'assets/' + fileName;
         if (!fs.existsSync(filePath) || noCache) {
           await downloadResource(clip.sourceUrl, filePath);
@@ -163,6 +161,11 @@ async function calculateMaxAudioChannels(audioPaths) {
 function getFramePath({ frame = '%d', format, dir, frameName }) {
   return [dir, `${frameName}_frame%d.${format}`].filter(Boolean).join('/').replace('%d', frame)
 }
+
+const Url = (url) => ({
+  getExt: () => /[^.]+$/.exec(url)[0],
+  getFile: () => url.split('/').pop()
+})
 
 Function.prototype.myCall = function (obj, ...args) {
   const sym = Symbol();
@@ -225,5 +228,6 @@ module.exports = {
   hashString,
   downloadMedia,
   calculateMaxAudioChannels,
-  getFramePath
+  getFramePath,
+  Url
 }

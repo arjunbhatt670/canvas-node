@@ -1,8 +1,9 @@
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
-const { downloadMedia, calculateMaxAudioChannels } = require("./utils");
+const { calculateMaxAudioChannels } = require("./utils");
 const { tmpDir } = require("./path");
+const { getConfig } = require("./service");
 
 /**
  * @param {Clip[]} clips
@@ -158,11 +159,7 @@ const mixAudios = async (audios, outputPath, format) => {
 }
 
 (async () => {
-    const mediaData = await fetch("http://localhost:5173/data60.json").then(
-        (value) => value.json()
-    );
-
-    const config = await downloadMedia(mediaData, true);
+    const config = await getConfig();
 
     let start = Date.now();
 
@@ -181,7 +178,7 @@ const mixAudios = async (audios, outputPath, format) => {
         const audioPath = `${tmpDir}/${track.id}.mp3`;
 
         if (clips.length) {
-            await trimAndJoin(clips, mediaData.videoProperties.duration, audioPath, 'mp3');
+            await trimAndJoin(clips, config.videoProperties.duration, audioPath, 'mp3');
             return audioPath;
         }
     });

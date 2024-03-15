@@ -38,7 +38,7 @@ app.get('/video-frame', express.json(), async (req, res) => {
 app.post('/extract-video-frames', express.json(), async (req, res) => {
     const { config } = req.body;
 
-    await extractVideoFrames(config);
+    await extractVideoFrames(config, 'png');
 
     res.json({
         ok: true

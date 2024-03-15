@@ -12,7 +12,7 @@ const { extractVideoFrames } = require("../pixiUtils");
 
     const config = await getConfig();
 
-    const videoFramesTempPath = await extractVideoFrames(config);
+    const videoFramesTempPath = await extractVideoFrames(config, 'png');
 
     tempPaths.push(videoFramesTempPath);
 
