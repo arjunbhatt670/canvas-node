@@ -1,27 +1,29 @@
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
-const { calculateMaxAudioChannels } = require("./utils");
-const { tmpDir } = require("./path");
+const { getStreams } = require("./utils");
+const { tmpDir, finalsPath } = require("./path");
 const { getConfig } = require("./service");
 
 /**
  * @param {Clip[]} clips
  * @param {number} totalDuration
  * @param {fs.WriteStream} stream
- * @returns {Promise<fs.WriteStream>}
+ * @returns {Promise<{path: string; channels: number}>}
  */
 const trimAndJoin = async (clips = [], totalDuration, outputPath, format) => {
-    const finalAudioChannels = await calculateMaxAudioChannels(clips.map(clip => clip.src));
+    const channels = Math.max(...clips.map(clip => clip.stream.channels));
 
     return new Promise((resolve, reject) => {
-        const stream = fs.createWriteStream(outputPath);
         const ffmpegCommand = ffmpeg();
         ffmpegCommand.setFfmpegPath(ffmpegPath);
         ffmpegCommand
             .on("end", () => {
                 console.log("trim and join finished");
-                resolve(stream);
+                resolve({
+                    path: outputPath,
+                    channels
+                });
             })
             .on("error", (err, _, stdout) => {
                 console.error("ffmpeg error:", err.message, stdout);
@@ -53,11 +55,12 @@ const trimAndJoin = async (clips = [], totalDuration, outputPath, format) => {
         }
 
         clips.forEach((clip, index) => {
+            const clipDuration = Math.min(totalDuration, clip.duration);
             filters.push({
                 filter: "atrim",
                 inputs: `[${index}:a]`,
                 options: {
-                    duration: clip.duration / 1000,
+                    duration: clipDuration / 1000,
                     start: clip.trim / 1000,
                 },
                 outputs: `[audio${index}]`,
@@ -67,13 +70,13 @@ const trimAndJoin = async (clips = [], totalDuration, outputPath, format) => {
             // Detect silences between clips
             if (
                 index !== clips.length - 1 &&
-                clip.start + clip.duration < clips[index + 1].start
+                clip.start + clipDuration < clips[index + 1].start
             ) {
                 filters.push({
                     filter: "aevalsrc",
                     options: {
                         exprs: 0,
-                        d: (clips[index + 1].start - (clip.start + clip.duration)) / 1000,
+                        d: (clips[index + 1].start - (clip.start + clipDuration)) / 1000,
                     },
                     outputs: `[silence${silenceCount}]`,
                 });
@@ -83,12 +86,13 @@ const trimAndJoin = async (clips = [], totalDuration, outputPath, format) => {
         });
 
         const lastClip = clips[clips.length - 1];
-        if (lastClip.start + lastClip.duration < totalDuration) {
+        const lastClipDuration = Math.min(totalDuration, lastClip.duration);
+        if (lastClip && lastClip.start + lastClipDuration < totalDuration) {
             filters.push({
                 filter: "aevalsrc",
                 options: {
                     exprs: 0,
-                    d: (totalDuration - (lastClip.start + lastClip.duration)) / 1000,
+                    d: (totalDuration - (lastClip.start + lastClipDuration)) / 1000,
                 },
                 outputs: `[silence${silenceCount}]`,
             });
@@ -108,12 +112,12 @@ const trimAndJoin = async (clips = [], totalDuration, outputPath, format) => {
 
         ffmpegCommand.complexFilter(filters);
 
-        // convert to stereo
-        ffmpegCommand.audioChannels(finalAudioChannels);
+        ffmpegCommand.audioChannels(channels);
 
         ffmpegCommand
             .outputOptions([`-f ${format}`])
-            .pipe(stream)
+            .output(outputPath)
+            .run();
     });
 };
 
@@ -123,7 +127,7 @@ const trimAndJoin = async (clips = [], totalDuration, outputPath, format) => {
  * @returns {Promise<void>}
  */
 const mixAudios = async (audios, outputPath, format) => {
-    const finalAudioChannels = await calculateMaxAudioChannels(audios);
+    const channels = Math.max(...audios.map(audio => audio.channels));
 
     return new Promise((resolve, reject) => {
         const stream = fs.createWriteStream(outputPath);
@@ -139,7 +143,7 @@ const mixAudios = async (audios, outputPath, format) => {
                 reject(err);
             });
 
-        audios.forEach((audio) => ffmpegCommand.addInput(audio));
+        audios.forEach((audio) => ffmpegCommand.addInput(audio.path));
 
         ffmpegCommand.complexFilter({
             filter: "amix",
@@ -150,7 +154,7 @@ const mixAudios = async (audios, outputPath, format) => {
         });
 
         // convert to stereo
-        ffmpegCommand.audioChannels(finalAudioChannels);
+        ffmpegCommand.audioChannels(channels);
 
         ffmpegCommand
             .outputOptions([`-f ${format}`])
@@ -158,48 +162,58 @@ const mixAudios = async (audios, outputPath, format) => {
     });
 }
 
-(async () => {
-    const config = await getConfig();
+const getAudioFromTrack = async (track, videoProperties) => {
+    const audioVideos = track.clips.filter(clip => ['VIDEO_CLIP', 'AUDIO_CLIP'].includes(clip.type));
 
-    let start = Date.now();
+    const audioClips = (await Promise.all(audioVideos.map(
+        /** @returns {Promise<Clip>} */
+        async function getAudio(clip) {
+            const streams = await getStreams(clip.sourceUrl);
+            const audioStream = streams.find(stream => stream.codec_type === 'audio');
 
-    const promises = config.tracks.map(async (track) => {
-        /** @type {Clip[]} */
-        const clips = track.clips
-            .filter(clip => ['VIDEO_CLIP', 'AUDIO_CLIP'].includes(clip.type))
-            .map((clip) => ({
+            if (!audioStream) return null;
+
+            return {
                 duration: clip.duration,
                 src: clip.sourceUrl,
                 start: clip.startOffSet,
                 end: clip.endOffSet,
                 trim: clip.trimOffset || 0,
-            }));
+                stream: audioStream
+            }
+        }))).filter(Boolean);
 
-        const audioPath = `${tmpDir}/${track.id}.mp3`;
+    if (audioClips.length) {
+        const audio = await trimAndJoin(audioClips, videoProperties.duration, `${tmpDir}/${track.id}.mp3`, 'mp3');
+        return audio;
+    }
+}
 
-        if (clips.length) {
-            await trimAndJoin(clips, config.videoProperties.duration, audioPath, 'mp3');
-            return audioPath;
-        }
-    });
+(async () => {
+    const { downloadedData: config } = await getConfig();
 
-    const audioPaths = (await Promise.allSettled(promises)).map(result => result.value).filter(Boolean);
+    let start = Date.now();
+
+    const audioPromises = config.tracks.map((track) => getAudioFromTrack(track, config.videoProperties));
+    const audios = (await Promise.all(audioPromises)).filter(Boolean);
 
     console.log('Merging time', Date.now() - start);
+
     start = Date.now();
 
-    await mixAudios(audioPaths, "output.mp3", 'mp3');
+    const finalAudioPath = `${finalsPath}/output.mp3`;
+    await mixAudios(audios, finalAudioPath, 'mp3');
 
     console.log('Mixing time', Date.now() - start);
 
-    ffmpeg.ffprobe('output.mp3', (_, data) => console.log('Final Audio properties', {
+    ffmpeg.ffprobe(finalAudioPath, (_, data) => console.log('Final Audio properties', {
         time: data.format.duration,
-        channel_name: data.streams[0].channel_layout,
+        channel_name: data.streams.map(stream => stream.channel_layout),
     }))
 
 
-    audioPaths.forEach((path) => {
-        fs.unlink(path, (err) => {
+    audios.forEach((audio) => {
+        fs.unlink(audio.path, (err) => {
             err ? console.error(err) : console.log("unlinked");
         });
     });

@@ -4,6 +4,7 @@ const { join } = require('path');
 const { PassThrough } = require('stream');
 const crypto = require('crypto');
 const ffmpeg = require("fluent-ffmpeg");
+const { assetsPath } = require('./path');
 
 async function downloadResource(url, dest) {
   return new Promise((resolve, reject) => {
@@ -123,12 +124,13 @@ const hashString = async (str) => {
  * @param {Media} jsonData 
  * @returns {Promise<Media>}
  */
-async function downloadMedia(jsonData, noCache = false) {
-  for (const track of jsonData.tracks) {
+async function downloadMedia(jsonData, deepClone = true, noCache = false) {
+  const data = deepClone ? structuredClone(jsonData) : jsonData;
+  for (const track of data.tracks) {
     for (const clip of track.clips) {
       if (clip.sourceUrl) {
         const fileName = `${clip.id}.${Url(clip.sourceUrl).getExt()}`; // Change file extension based on resource type
-        const filePath = 'assets/' + fileName;
+        const filePath = `${assetsPath}/${fileName}`;
         if (!fs.existsSync(filePath) || noCache) {
           await downloadResource(clip.sourceUrl, filePath);
         }
@@ -137,24 +139,23 @@ async function downloadMedia(jsonData, noCache = false) {
     }
   }
 
-  return jsonData;
+  return data;
 }
 
 /**
- * @param {string[]} audioPaths
+ * @param {string} media
+ * @returns {Promise<ffmpeg.FfprobeStream[]>}
  */
-async function calculateMaxAudioChannels(audioPaths) {
-  return Math.max(
-    ...(await Promise.allSettled(
-      audioPaths.map(
-        async (audio) =>
-          new Promise((res) =>
-            ffmpeg.ffprobe(audio, (_, data) =>
-              res(data.streams.find(stream => stream.codec_type === 'audio')?.channels)
-            )
-          )
-      )
-    )).map((result) => result.value)
+function getStreams(media) {
+  return new Promise((res, rej) =>
+    ffmpeg.ffprobe(media, (err, data) => {
+      if (!err) {
+        res(data.streams)
+      } else {
+        rej(err)
+      }
+    }
+    )
   )
 }
 
@@ -227,7 +228,7 @@ module.exports = {
   asyncIterable,
   hashString,
   downloadMedia,
-  calculateMaxAudioChannels,
   getFramePath,
-  Url
+  Url,
+  getStreams
 }
