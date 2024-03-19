@@ -2,7 +2,7 @@ const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
 
 module.exports = async function video2Frame(inputVideo, output, inputOptions) {
-    const { startTime = 0, duration, frameRate, width, height } = inputOptions;
+    const { startTime = 0, frameRate, width, height, frameCount } = inputOptions;
 
     return new Promise((resolve) => {
         const ffmpegCommand = ffmpeg();
@@ -11,14 +11,14 @@ module.exports = async function video2Frame(inputVideo, output, inputOptions) {
         ffmpegCommand
             .input(inputVideo)
             .inputOptions([
-                `-ss ${startTime}`,
-                `-t ${duration}`
+                `-ss ${startTime}`
             ])
             .outputOptions([
                 `-r ${frameRate}`,
                 `-vf fps=${frameRate}`,
                 `-vf scale=${width ?? -1}:${height ?? -1}`,
-                `-vframes ${frameRate * duration}`
+                `-vframes ${frameCount}`,
+                '-q:v 1'
             ])
             .on('start', () => {
                 console.log('frame extraction for', inputVideo, 'started');

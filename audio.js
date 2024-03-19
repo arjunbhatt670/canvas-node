@@ -201,7 +201,7 @@ const getAudioFromTrack = async (track, videoProperties) => {
 
     start = Date.now();
 
-    const finalAudioPath = `${finalsPath}/output.mp3`;
+    const finalAudioPath = `${finalsPath}/output_120s.mp3`;
     await mixAudios(audios, finalAudioPath, 'mp3');
 
     console.log('Mixing time', Date.now() - start);

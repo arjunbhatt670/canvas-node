@@ -1,0 +1,169 @@
+{
+  "tracks": [
+    {
+      "id": "4e624bf1-0771-4573-87d2-636afc561614",
+      "clips": [
+        {
+          "id": "477fe9be-b3d3-44f8-b1e5-51464902a8a7",
+          "type": "IMAGE_CLIP",
+          "startOffSet": 0,
+          "duration": 60000,
+          "endOffSet": 60000,
+          "coordinates": {
+            "x": 0,
+            "y": 0,
+            "width": 640,
+            "height": 360
+          },
+          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdn/DAM/66000000/0783ba61-4c01-4c35-8340-759d98750eaa-2110567341/https___pbs.twimg.com_media_EI.jpg",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicImageEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "a9ceb77f-1ff4-4970-8dba-c444683dfa66",
+      "clips": [
+        {
+          "id": "5b638202-b897-4c51-aa9e-06aefd07f14a",
+          "type": "IMAGE_CLIP",
+          "startOffSet": 50000,
+          "duration": 10000,
+          "endOffSet": 21423,
+          "coordinates": {
+            "x": 469,
+            "y": 229,
+            "width": 200,
+            "height": 191
+          },
+          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/ceb76324-16e6-4a52-a66d-908a576652f2-1981525652/https___pbs.twimg.com_media_GI.png",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicImageEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "q3ed8eaa-8434-49ad-9fdd-32a8317b5fd5",
+      "clips": [
+        {
+          "id": "llda548cd-4fe8-4d16-9aa-5bbeff84e7bc",
+          "type": "VIDEO_CLIP",
+          "trimOffset": 9000,
+          "startOffSet": 10000,
+          "duration": 20000,
+          "endOffSet": 4000,
+          "coordinates": {
+            "x": 0,
+            "y": 0,
+            "width": 640,
+            "height": 360
+          },
+          "sourceUrl": "https://pixijs.com/assets/video.mp4",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "005e8f5c-16b6-47d1-a1ad-bb2f4003e4fd",
+      "clips": [
+        {
+          "id": "7bb0c171-20f5-4548-8847-463addd5b40c",
+          "type": "VIDEO_CLIP",
+          "startOffSet": 0,
+          "duration": 8000,
+          "endOffSet": 14864,
+          "coordinates": {
+            "x": 0,
+            "y": 0,
+            "width": 320,
+            "height": 180
+          },
+          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/6fc6d744-0f3d-4866-a173-382e7580a5d0-1126246268/video3_fb_reel_test2verylongna.mp4",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "ca898122-6cbe-4d2f-954c-b75ed823dc32",
+      "clips": [
+        {
+          "id": "20338a9f-430a-42f3-b319-bb65997f984a",
+          "type": "VIDEO_CLIP",
+          "startOffSet": 0,
+          "duration": 60000,
+          "endOffSet": 60000,
+          "coordinates": {
+            "x": 452,
+            "y": 8,
+            "width": 180,
+            "height": 101
+          },
+          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdn/DAM/66000000/f7fa8542-4ae2-4891-8a84-8b3a24dc99f7-148749600/Largerthan15mins.mp4",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "9cf4d373-bbd1-4130-9557-57a3ef96582e",
+      "clips": [
+        {
+          "id": "89091b4a-4634-487a-886d-f5606ec433d6",
+          "type": "VIDEO_CLIP",
+          "startOffSet": 0,
+          "duration": 10000,
+          "endOffSet": 13203,
+          "coordinates": {
+            "x": 320,
+            "y": 180,
+            "width": 320,
+            "height": 180
+          },
+          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdn/DAM/66000000/867f9a23-658a-4f2b-80e0-a7a993c8ad87-2002531289/https___video.twimg.com_amplif.mp4",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "2b0d5d6d-3c8e-4c2f-840d-0a42135c4f3f",
+      "clips": [
+        {
+          "id": "e99d5624-d701-4db4-a7b3-230680845519",
+          "type": "AUDIO_CLIP",
+          "startOffSet": 0,
+          "duration": 60000,
+          "endOffSet": 60000,
+          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdn/DAM/66000000/8e7abe95-404c-498b-a991-97f7bb124834-694482056/Audio_MP3.mp3",
+          "fadeIn": 0,
+          "fadeOut": 0,
+          "volume": 1,
+          "dynamicAudioEnabled": false
+        }
+      ]
+    }
+  ],
+  "videoProperties": {
+    "duration": 60000,
+    "frameRate": 30,
+    "height": 360,
+    "width": 640
+  },
+  "variationId": "922745a5-5ccc-4abd-813f-decc563bfcd8",
+  "variationName": "Untitled",
+  "channelType": "FACEBOOK"
+}

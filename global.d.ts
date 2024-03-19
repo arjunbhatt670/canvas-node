@@ -1,9 +1,12 @@
+import Ffmpeg from "fluent-ffmpeg";
+
 declare interface Clip {
   src: string;
   start: number;
   end?: number;
   duration: number;
   trim: number;
+  stream: Ffmpeg.FfprobeStream;
 }
 
 declare function MixAudio(audios: any, duration: string): void;

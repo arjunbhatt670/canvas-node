@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ARJUN=arjun node puppeteer/frameCapture.js",
-    "devStart": "nodemon server/app.js"
+    "pup": "OUTPUT=finals/output_pup.mp4 node puppeteer/frameCapture.js",
+    "dev": "nodemon server/app.js",
+    "pixi": "OUTPUT=finals/output_pixi.mp4 node pixi.js"
   },
   "author": "",
   "license": "ISC",

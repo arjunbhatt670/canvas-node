@@ -1,9 +1,9 @@
 node_modules
-output.mp4
-output.mp3
+
 intermediates
-inputVideo.mp4
 assets
+finals
+compared
+
 puppeteerFrames
 pixiFrames
-compared

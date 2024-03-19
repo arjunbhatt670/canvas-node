@@ -11,6 +11,8 @@ const { tmpDir } = require('./path');
 const extractVideoFrames = async (config, imgType) => {
     const videoClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'VIDEO_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
+    const totalDuration = config.videoProperties.duration;
+
     const extractStart = Date.now();
     const promises = videoClips.map(async (clip) => {
         const frameOutputPath = getFramePath({ dir: tmpDir, format: imgType, frameName: clip.id });
@@ -18,11 +20,11 @@ const extractVideoFrames = async (config, imgType) => {
         await new Promise((res, rej) => exec(`rm -rf ${frameOutputPath.replace('%d', '**')}`, (err) => err ? rej(err) : res()));
 
         return video2Frame(clip.sourceUrl, frameOutputPath, {
-            duration: clip.duration / 1000,
             startTime: (clip.trimOffset || 0) / 1000,
             frameRate: config.videoProperties.frameRate,
             height: clip.coordinates.height,
             width: clip.coordinates.width,
+            frameCount: Math.ceil(Math.min(clip.duration, totalDuration) * config.videoProperties.frameRate / 1000)
         });
     });
 

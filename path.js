@@ -1,8 +1,8 @@
 const { resolve } = require('path');
 
-const rootPath = resolve('./');
-
 module.exports = {
-    rootPath,
-    tmpDir: `${rootPath}/intermediates`
+    rootPath: resolve('./'),
+    tmpDir: resolve('./intermediates'),
+    assetsPath: resolve('./assets'),
+    finalsPath: resolve('./finals')
 };

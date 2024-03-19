@@ -7,7 +7,7 @@
           "id": "3f5a7380-de1a-48bc-aee9-bcebb79bb7f0",
           "type": "IMAGE_CLIP",
           "startOffSet": 0,
-          "duration": 10000,
+          "duration": 60000,
           "endOffSet": 10000,
           "coordinates": {
             "x": 0,
@@ -55,7 +55,6 @@
           "startOffSet": 0,
           "duration": 2000,
           "endOffSet": 2000,
-          "trimOffset": 10000,
           "coordinates": {
             "x": 1,
             "y": -2,
@@ -76,9 +75,8 @@
         {
           "id": "2ca83020-3d13-46eb-bba9-fac4a2b0767d",
           "type": "VIDEO_CLIP",
-          "startOffSet": 2000,
-          "duration": 58000,
-          "trimOffset": 0,
+          "startOffSet": 0,
+          "duration": 60000,
           "endOffSet": 4000,
           "coordinates": {
             "x": 6,
@@ -100,7 +98,6 @@
         {
           "id": "llda548cd-4fe8-4d16-9aa-5bbeff84e7bc",
           "type": "VIDEO_CLIP",
-          "trimOffset": 3000,
           "startOffSet": 0,
           "duration": 10000,
           "endOffSet": 4000,
@@ -111,6 +108,29 @@
             "height": 180
           },
           "sourceUrl": "https://pixijs.com/assets/video.mp4",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "ca898122-6cbe-4d2f-954c-b75ed823dc32",
+      "clips": [
+        {
+          "id": "20338a9f-430a-42f3-b319-bb65997f984a",
+          "type": "VIDEO_CLIP",
+          "startOffSet": 0,
+          "duration": 60000,
+          "endOffSet": 60000,
+          "coordinates": {
+            "x": 452,
+            "y": 8,
+            "width": 180,
+            "height": 101
+          },
+          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdn/DAM/66000000/f7fa8542-4ae2-4891-8a84-8b3a24dc99f7-148749600/Largerthan15mins.mp4",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",

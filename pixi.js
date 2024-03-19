@@ -5,16 +5,15 @@ const fs = require('fs');
 const PIXI = require('./pixi-node');
 const frame2Video = require('./frame2Video');
 const { getFramePath, Url } = require('./utils');
-const { tmpDir } = require('./path');
+const { tmpDir, finalsPath } = require('./path');
 const { getVisibleObjects, extractVideoFrames } = require('./pixiUtils');
 const { getConfig } = require('./service');
-
 
 (async () => {
     const tempPaths = [];
     const imgType = 'png';
 
-    const config = await getConfig();
+    const { downloadedData: config } = await getConfig();
 
     const videoFramesTempPath = await extractVideoFrames(config, imgType);
 
@@ -78,7 +77,7 @@ const { getConfig } = require('./service');
 
         for (let clipIndex = 0; clipIndex < clips.length; clipIndex++) { // 5ms
             const clip = clips[clipIndex];
-            const clipStartFrame = (clip.startOffSet * config.videoProperties.frameRate) / 1000;
+            const clipStartFrame = Math.round((clip.startOffSet * config.videoProperties.frameRate) / 1000);
 
             switch (clip.type) {
                 case 'VIDEO_CLIP': {
@@ -171,5 +170,5 @@ const { getConfig } = require('./service');
         exec(`rm -rf ${path}`);
     })
 
-    frame2Video(inputStream, config.videoProperties.frameRate, 'output2.mp4');
+    frame2Video(inputStream, config.videoProperties.frameRate, process.env.OUTPUT ?? `${finalsPath}/output_pixi_120s.mp4`);
 })();

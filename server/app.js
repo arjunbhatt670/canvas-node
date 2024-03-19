@@ -6,6 +6,7 @@ const server = http.Server(app);
 const { getFramePath } = require('../utils');
 const { tmpDir } = require('../path');
 const { extractVideoFrames } = require('../pixiUtils');
+const { getConfig } = require('../service');
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -36,9 +37,10 @@ app.get('/video-frame', express.json(), async (req, res) => {
 })
 
 app.post('/extract-video-frames', express.json(), async (req, res) => {
-    const { config } = req.body;
 
-    await extractVideoFrames(config, 'png');
+    const { downloadedData } = await getConfig();
+
+    await extractVideoFrames(downloadedData, 'png');
 
     res.json({
         ok: true

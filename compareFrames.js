@@ -30,3 +30,7 @@ const looksSame = require('looks-same');
 // fs.writeFileSync(`${rootPath}/pixiFrames/frame_${currentFrame}.jpeg`, baseData.split(';base64,').pop(), {
 //     encoding: 'base64'
 // })
+
+// fs.writeFileSync(`${rootPath}/puppeteerFrames/frame_${currentFrame}.jpeg`, url.split(';base64,').pop(), {
+//     encoding: 'base64'
+// })
