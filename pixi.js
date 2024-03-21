@@ -5,7 +5,7 @@ const fs = require('fs');
 const PIXI = require('./pixi-node');
 const frame2Video = require('./frame2Video');
 const { getFramePath, Url } = require('./utils');
-const { tmpDir, finalsPath } = require('./path');
+const { tmpDir, finalsPath, rootPath } = require('./path');
 const { getVisibleObjects, extractVideoFrames } = require('./pixiUtils');
 const { getConfig } = require('./service');
 
@@ -63,12 +63,16 @@ const { getConfig } = require('./service');
 
     const inputStream = new PassThrough();
 
-    let pixiStart = Date.now();
+    const statics = new Map();
+    let time = {
+        draw: 0,
+        extract: 0,
+        total: Date.now()
+    };
     let currentFrame = 1;
 
-    const statics = new Map();
-
     while (currentFrame <= totalFrames) {
+        const drawTime = Date.now();
         const currentTime = ((currentFrame - 1) * 1000) / config.videoProperties.frameRate;
         const clips = getVisibleObjects(config, currentTime);
 
@@ -145,12 +149,21 @@ const { getConfig } = require('./service');
         }
 
         app.render();
+        time.draw += (Date.now() - drawTime);
+
+        const extractTime = Date.now();
+
         const baseData = app.view.toDataURL('image/jpeg', 1);  // 5ms
         const bufferData = Buffer.from(baseData
             // .split('base64,')[1]
             , 'base64');
 
-        // fs.writeFileSync(`intermediates/int1_${currentFrame}.jpeg`, bufferData)
+        time.extract += (Date.now() - extractTime);
+
+        // fs.writeFileSync(`${rootPath}/pixiFrames/frame_${currentFrame}.jpeg`, baseData.split(';base64,').pop(), {
+        //     encoding: 'base64'
+        // })
+
 
         inputStream.write(bufferData);  // 0.15ms
 
@@ -159,9 +172,9 @@ const { getConfig } = require('./service');
 
     app.destroy();
 
-    const pixiEnd = Date.now();
+    time.total = Date.now() - time.total;
     console.log('Processed', totalFrames, 'frames.');
-    console.log("Drawing took", pixiEnd - pixiStart, 'ms')
+    console.log("Canvas drawing took", time.total, 'ms', `(Drawing - ${time.draw} ms)`, `(Extract - ${time.extract} ms)`);
 
     inputStream.end();
 
@@ -170,5 +183,5 @@ const { getConfig } = require('./service');
         exec(`rm -rf ${path}`);
     })
 
-    frame2Video(inputStream, config.videoProperties.frameRate, process.env.OUTPUT ?? `${finalsPath}/output_pixi_120s.mp4`);
+    frame2Video(inputStream, config.videoProperties.frameRate, process.env.OUTPUT ?? `${finalsPath}/output_pixi_60s.mp4`);
 })();

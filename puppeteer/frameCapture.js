@@ -2,13 +2,14 @@
 
 const { PassThrough } = require("stream");
 const { exec } = require('child_process');
+const fs = require('fs')
 
 
 const Puppeteer = require(".");
 const frame2Video = require("../frame2Video");
 const { getConfig } = require("../service");
 const { extractVideoFrames } = require("../pixiUtils");
-const { finalsPath } = require("../path");
+const { finalsPath, rootPath } = require("../path");
 
 (async () => {
     const tempPaths = [];
@@ -51,38 +52,68 @@ const { finalsPath } = require("../path");
     const totalFrames = (config.videoProperties.duration * config.videoProperties.frameRate) / 1000;
     let currentFrame = 1;
     const inputStream = new PassThrough();
-    const startTime = Date.now();
+    let time = {
+        draw: 0,
+        extract: 0,
+        total: Date.now(),
+        communication: 0,
+    };
 
     while (currentFrame <= totalFrames) {
-        const url = await page.evaluate(
-            function (currentFrame) {
+        const communicationStart = Date.now();
+        const { url, time: { drawTime, extractTime, communicationTime, communicationEnd } } = await page.evaluate(
+            function (currentFrame, communicationStart) {
+                let communicationTime = (Date.now() - communicationStart);
                 return new Promise((resolve) => {
-                    window.onFrameChange(currentFrame);
-
+                    let drawTime = Date.now();
                     document.addEventListener('canvas-seeked', function seeked() {
+                        drawTime = Date.now() - drawTime;
+                        let extractTime = Date.now();
+
                         const dataUrl = window.pixiApp.view.toDataURL('image/jpeg', 1);
-                        resolve(dataUrl);
+
+                        extractTime = Date.now() - extractTime;
+
+                        const communicationEnd = Date.now();
+                        resolve({ url: dataUrl, time: { drawTime, extractTime, communicationTime, communicationEnd } });
+
                         document.removeEventListener('canvas-seeked', seeked);
-                    })
+                    });
+
+                    window.onFrameChange(currentFrame);
                 })
             },
-            currentFrame
+            currentFrame, communicationStart
         );
 
-        inputStream.write(Buffer.from(url
+        time.draw += drawTime;
+        time.extract += extractTime;
+        time.communication += communicationTime + (Date.now() - communicationEnd);
+
+        // fs.writeFileSync(`${rootPath}/puppeteerFrames/frame_${currentFrame}.jpeg`, url.split(';base64,').pop(), {
+        //     encoding: 'base64'
+        // })
+
+        const bufferCreationStart = Date.now();
+        const buffer = Buffer.from(url
             // .split('base64,')[1]
-            , "base64"));
+            , "base64");
+        time.extract += (Date.now() - bufferCreationStart);
+
+        inputStream.write(buffer);
         currentFrame++;
     }
+
+    time.total = Date.now() - time.total;
 
     await puppeteer.exit();
 
     console.log('Processed', totalFrames, 'frames.');
-    console.log("Drawing took", Date.now() - startTime, 'ms')
+    console.log("Canvas drawing took", time.total, 'ms', `(Drawing - ${time.draw} ms)`, `(Extract - ${time.extract} ms)`, `(Communication - ${time.communication} ms)`);
 
     inputStream.end();
 
-    const finalVideoPath = `${finalsPath}/output_pup_30s.mp4`;
+    const finalVideoPath = `${finalsPath}/output_pup_60s.mp4`;
 
     frame2Video(inputStream, config.videoProperties.frameRate, finalVideoPath);
 

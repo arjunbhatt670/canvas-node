@@ -25,6 +25,7 @@ module.exports = function frame2Video(inputStream, frameRate, outputPath) {
         })
         .on('end', () => {
             console.log('ffmpeg video conversion time spent', Date.now() - ffmpegStartTime, 'ms');
+            console.log('Video saved to path', outputPath);
             command.input(outputPath).ffprobe(function (err, metadata) {
                 console.log('Duration of video', metadata.format.duration, 'seconds');
             });

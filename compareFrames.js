@@ -3,15 +3,15 @@ const looksSame = require('looks-same');
 (async () => {
     let i = 1;
 
-    while (i <= 10) {
+    while (i <= 50) {
 
-        const { equal, diffImage, differentPixels } = await looksSame(`./puppeteerFrames/frame_${i}.jpeg`, `./pixiFrames/frame_${i}.jpeg`, {
+        const { equal, diffImage, differentPixels } = await looksSame(`./puppeteerFrames/frame_${i + 1}.jpeg`, `./pixiFrames/frame_${i}.jpeg`, {
             createDiffImage: true,
             ignoreAntialiasing: true,
             antialiasingTolerance: 10,
         });
 
-        diffImage?.save(`./compared/diff_random${i}.jpeg`)
+        diffImage?.save(`./compared/diff_custom_pixi_react${i}.jpeg`)
         console.log('for i = ', i, 'is both images equal?', equal, 'number of different pixels - ', differentPixels);
 
         i++;
