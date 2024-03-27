@@ -1,7 +1,7 @@
 const { exec } = require('child_process');
 
 const video2Frame = require("./video2Frame");
-const { getFramePath } = require('./utils');
+const { getFramePath, print } = require('./utils');
 const { tmpDir } = require('./path');
 
 /**
@@ -28,8 +28,8 @@ const extractVideoFrames = async (config, imgType) => {
         });
     });
 
-    await Promise.allSettled(promises);
-    console.log('Video frames extraction took', Date.now() - extractStart, 'ms');
+    await Promise.all(promises);
+    print(`Video frames extraction took ${Date.now() - extractStart} ms`);
 
     return getFramePath({
         dir: tmpDir,

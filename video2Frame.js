@@ -1,6 +1,10 @@
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
+const { print } = require('./utils');
 
+/**
+ * @returns {Promise<string | PassThrough>}
+ */
 module.exports = async function video2Frame(inputVideo, output, inputOptions) {
     const { startTime = 0, frameRate, width, height, frameCount } = inputOptions;
 
@@ -21,22 +25,25 @@ module.exports = async function video2Frame(inputVideo, output, inputOptions) {
                 '-q:v 1'
             ])
             .on('start', () => {
-                console.log('frame extraction for', inputVideo, 'started');
+                print(`frame extraction for ${inputVideo} started`);
             }).on('end', () => {
-                console.log('frame extraction for', inputVideo, 'completed');
-                resolve();
+                print(`frame extraction for ${inputVideo} completed`);
             }).on('error', (err, stderr, stdout) => {
                 console.error('ffmpeg error:', err.message, stdout);
             });
 
-        if (typeof inputVideo === 'string') {
+        if (typeof output === 'string') {
             ffmpegCommand
                 .output(output)
+                .on('end', () => {
+                    resolve(output);
+                })
                 .run();
         } else {
-            ffmpegCommand
-                .addOutputOptions(['-f image2pipe'])
-                .pipe();
+            const res = ffmpegCommand
+                .addOutputOptions(['-c:v png', '-f image2pipe'])
+                .pipe(output);
+            resolve(res);
         }
     })
 }

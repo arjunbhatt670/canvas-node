@@ -221,6 +221,9 @@ Array.prototype.myForEach = function (callback) {
   })
 }
 
+
+const print = (value) => process.stdout.write(value + '\n')
+
 module.exports = {
   downloadResource,
   getFilesCountIn,
@@ -230,5 +233,6 @@ module.exports = {
   downloadMedia,
   getFramePath,
   Url,
-  getStreams
+  getStreams,
+  print
 }

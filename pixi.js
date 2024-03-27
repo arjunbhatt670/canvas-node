@@ -1,11 +1,11 @@
-const { PassThrough } = require('stream');
+const { Readable } = require('stream');
 const { exec } = require('child_process');
 const fs = require('fs');
 
 const PIXI = require('./pixi-node');
 const frame2Video = require('./frame2Video');
-const { getFramePath, Url } = require('./utils');
-const { tmpDir, finalsPath, rootPath } = require('./path');
+const { getFramePath, Url, print } = require('./utils');
+const { tmpDir, finalsPath } = require('./path');
 const { getVisibleObjects, extractVideoFrames } = require('./pixiUtils');
 const { getConfig } = require('./service');
 
@@ -19,6 +19,8 @@ const { getConfig } = require('./service');
 
     tempPaths.push(videoFramesTempPath);
 
+    const totalTimeStart = Date.now();
+
     const shapeClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'SHAPE_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
     const shapeExtractStart = Date.now();
@@ -27,7 +29,7 @@ const { getConfig } = require('./service');
         tempPaths.push(path);
         fs.writeFileSync(path, Buffer.from(clip.shapeInfo.shapeMediaUrl.split('base64,')[1], 'base64url'))
     })
-    console.log('Shapes extraction time', Date.now() - shapeExtractStart, 'ms');
+    print(`Shapes extraction time ${Date.now() - shapeExtractStart} ms`);
 
     const imageClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'IMAGE_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
@@ -37,7 +39,7 @@ const { getConfig } = require('./service');
         tempPaths.push(path);
         fs.copyFileSync(clip.sourceUrl, path);
     })
-    console.log('images extraction time', Date.now() - imageExtractStart, 'ms');
+    print(`images extraction time ${Date.now() - imageExtractStart} ms`);
 
 
     const totalFrames = (config.videoProperties.duration * config.videoProperties.frameRate) / 1000;
@@ -58,11 +60,10 @@ const { getConfig } = require('./service');
 
     const assetLoadStart = Date.now();
     await PIXI.Assets.load(fs.readdirSync(tmpDir))
-    console.log('Assets loaded in pixi cache took', Date.now() - assetLoadStart, 'ms')
+    print(`Assets loaded in pixi cache took ${Date.now() - assetLoadStart} ms`)
 
 
-    const inputStream = new PassThrough();
-
+    const inputStream = new Readable();
     const statics = new Map();
     let time = {
         draw: 0,
@@ -71,8 +72,12 @@ const { getConfig } = require('./service');
     };
     let currentFrame = 1;
 
+    frame2Video(inputStream, config.videoProperties.frameRate, process.env.OUTPUT ?? `${finalsPath}/output_pixi_60s.mp4`).then(() => {
+        print(`Total Time - ${Date.now() - totalTimeStart} ms`)
+    });
+
     while (currentFrame <= totalFrames) {
-        const drawTime = Date.now();
+        const drawStart = Date.now();
         const currentTime = ((currentFrame - 1) * 1000) / config.videoProperties.frameRate;
         const clips = getVisibleObjects(config, currentTime);
 
@@ -149,39 +154,34 @@ const { getConfig } = require('./service');
         }
 
         app.render();
-        time.draw += (Date.now() - drawTime);
+        time.draw += (Date.now() - drawStart);
 
-        const extractTime = Date.now();
+        const extractStart = Date.now();
 
         const baseData = app.view.toDataURL('image/jpeg', 1);  // 5ms
         const bufferData = Buffer.from(baseData
             // .split('base64,')[1]
             , 'base64');
+        inputStream.push(bufferData); // 0.15ms
 
-        time.extract += (Date.now() - extractTime);
+        time.extract += (Date.now() - extractStart);
 
         // fs.writeFileSync(`${rootPath}/pixiFrames/frame_${currentFrame}.jpeg`, baseData.split(';base64,').pop(), {
         //     encoding: 'base64'
         // })
 
-
-        inputStream.write(bufferData);  // 0.15ms
-
         currentFrame++;
     }
 
+    inputStream.push(null);
     app.destroy();
 
     time.total = Date.now() - time.total;
-    console.log('Processed', totalFrames, 'frames.');
-    console.log("Canvas drawing took", time.total, 'ms', `(Drawing - ${time.draw} ms)`, `(Extract - ${time.extract} ms)`);
-
-    inputStream.end();
+    print(`Processed ${totalFrames} frames.`);
+    print(`Canvas drawing took ${time.total} ms. (Drawing - ${time.draw} ms) (Extract - ${time.extract} ms)`);
 
     /** Remove temp files */
     tempPaths.forEach((path) => {
         exec(`rm -rf ${path}`);
     })
-
-    frame2Video(inputStream, config.videoProperties.frameRate, process.env.OUTPUT ?? `${finalsPath}/output_pixi_60s.mp4`);
 })();

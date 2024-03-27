@@ -1,15 +1,15 @@
 /* global window */
 
-const { PassThrough } = require("stream");
+const { Readable } = require("stream");
 const { exec } = require('child_process');
-const fs = require('fs')
 
 
 const Puppeteer = require(".");
 const frame2Video = require("../frame2Video");
 const { getConfig } = require("../service");
 const { extractVideoFrames } = require("../pixiUtils");
-const { finalsPath, rootPath } = require("../path");
+const { finalsPath } = require("../path");
+const { print } = require("../utils");
 
 (async () => {
     const tempPaths = [];
@@ -19,13 +19,14 @@ const { finalsPath, rootPath } = require("../path");
 
     tempPaths.push(videoFramesTempPath);
 
+    const totalTimeStart = Date.now();
     const puppeteerLoadStart = Date.now();
 
     const puppeteer = new Puppeteer();
     const page = await puppeteer.init();
     await page.goto("http://localhost:3000/");
 
-    console.log('Time taken by puppeteer to load page', Date.now() - puppeteerLoadStart, 'ms');
+    console.log(`Time taken by puppeteer to load page ${Date.now() - puppeteerLoadStart} ms`);
 
     const reactRunStart = Date.now();
 
@@ -35,7 +36,7 @@ const { finalsPath, rootPath } = require("../path");
         return new Promise((resolve) => document.addEventListener('app-mounted', resolve));
     });
 
-    console.log('React init took', Date.now() - reactRunStart, 'ms');
+    console.log(`React init took ${Date.now() - reactRunStart} ms`);
 
     const assetsLoadStart = Date.now();
 
@@ -46,12 +47,14 @@ const { finalsPath, rootPath } = require("../path");
         return new Promise((resolve) => document.addEventListener('assets-loaded', resolve))
     }, rawConfig);
 
-    console.log('Time taken by puppeteer to load initial assets required - ', Date.now() - assetsLoadStart, 'ms');
+    print(`Time taken by puppeteer to load initial assets required - ${Date.now() - assetsLoadStart} ms`);
 
 
     const totalFrames = (config.videoProperties.duration * config.videoProperties.frameRate) / 1000;
     let currentFrame = 1;
-    const inputStream = new PassThrough();
+    const inputStream = new Readable({
+        read: () => { }
+    });
     let time = {
         draw: 0,
         extract: 0,
@@ -59,9 +62,13 @@ const { finalsPath, rootPath } = require("../path");
         communication: 0,
     };
 
+    frame2Video(inputStream, config.videoProperties.frameRate, `${finalsPath}/output_pup_60s.mp4`).then(() => {
+        print(`Total Time - ${Date.now() - totalTimeStart} ms`)
+    });
+
     while (currentFrame <= totalFrames) {
         const communicationStart = Date.now();
-        const { url, time: { drawTime, extractTime, communicationTime, communicationEnd } } = await page.evaluate(
+        const { baseData, time: { drawTime, extractTime, communicationTime, communicationEnd } } = await page.evaluate(
             function (currentFrame, communicationStart) {
                 let communicationTime = (Date.now() - communicationStart);
                 return new Promise((resolve) => {
@@ -75,7 +82,7 @@ const { finalsPath, rootPath } = require("../path");
                         extractTime = Date.now() - extractTime;
 
                         const communicationEnd = Date.now();
-                        resolve({ url: dataUrl, time: { drawTime, extractTime, communicationTime, communicationEnd } });
+                        resolve({ baseData: dataUrl, time: { drawTime, extractTime, communicationTime, communicationEnd } });
 
                         document.removeEventListener('canvas-seeked', seeked);
                     });
@@ -95,27 +102,21 @@ const { finalsPath, rootPath } = require("../path");
         // })
 
         const bufferCreationStart = Date.now();
-        const buffer = Buffer.from(url
+        const buffer = Buffer.from(baseData
             // .split('base64,')[1]
             , "base64");
+        inputStream.push(buffer); // 0.15ms
         time.extract += (Date.now() - bufferCreationStart);
 
-        inputStream.write(buffer);
         currentFrame++;
     }
 
     time.total = Date.now() - time.total;
+    print(`Processed ${totalFrames} frames.`);
+    print(`Canvas drawing took ${time.total} ms. (Drawing - ${time.draw} ms) (Extract - ${time.extract} ms) (Communication - ${time.communication} ms)`);
 
+    inputStream.push(null);
     await puppeteer.exit();
-
-    console.log('Processed', totalFrames, 'frames.');
-    console.log("Canvas drawing took", time.total, 'ms', `(Drawing - ${time.draw} ms)`, `(Extract - ${time.extract} ms)`, `(Communication - ${time.communication} ms)`);
-
-    inputStream.end();
-
-    const finalVideoPath = `${finalsPath}/output_pup_60s.mp4`;
-
-    frame2Video(inputStream, config.videoProperties.frameRate, finalVideoPath);
 
     /** Remove temp files */
     tempPaths.forEach((path) => {
