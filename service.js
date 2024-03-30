@@ -1,4 +1,4 @@
-const { downloadMedia } = require("./utils");
+const { downloadMedia, TimeTracker } = require("./utils");
 
 const apiURL = "http://localhost:5173";
 
@@ -7,9 +7,10 @@ module.exports.getConfig = async function getConfig() {
     const data = await fetch(`${apiURL}/data60.json`)
         .then((value) => value.json())
 
-    const assetsDownloadStart = Date.now();
+    const timeTracker = new TimeTracker();
+    timeTracker.start();
     const downloadedData = await downloadMedia(data);
-    console.log('Fetching media assets took', Date.now() - assetsDownloadStart, 'ms');
+    timeTracker.log('Fetched media assets');
 
     return { data, downloadedData };
 }

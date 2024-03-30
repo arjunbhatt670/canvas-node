@@ -1,7 +1,7 @@
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
-const { getStreams } = require("./utils");
+const { getStreams, TimeTracker } = require("./utils");
 const { tmpDir, finalsPath } = require("./path");
 const { getConfig } = require("./service");
 
@@ -192,19 +192,20 @@ const getAudioFromTrack = async (track, videoProperties) => {
 (async () => {
     const { downloadedData: config } = await getConfig();
 
-    let start = Date.now();
+    const timeTracker = new TimeTracker();
+    timeTracker.start();
 
     const audioPromises = config.tracks.map((track) => getAudioFromTrack(track, config.videoProperties));
     const audios = (await Promise.all(audioPromises)).filter(Boolean);
 
-    console.log('Merging time', Date.now() - start);
+    timeTracker.log('Audios merged');
 
-    start = Date.now();
+    timeTracker.start();
 
     const finalAudioPath = `${finalsPath}/output_120s.mp3`;
     await mixAudios(audios, finalAudioPath, 'mp3');
 
-    console.log('Mixing time', Date.now() - start);
+    timeTracker.log('Audios mixed')
 
     ffmpeg.ffprobe(finalAudioPath, (_, data) => console.log('Final Audio properties', {
         time: data.format.duration,

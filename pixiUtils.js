@@ -1,7 +1,7 @@
 const { exec } = require('child_process');
 
 const video2Frame = require("./video2Frame");
-const { getFramePath, print } = require('./utils');
+const { getFramePath, TimeTracker } = require('./utils');
 const { tmpDir } = require('./path');
 
 /**
@@ -13,7 +13,8 @@ const extractVideoFrames = async (config, imgType) => {
 
     const totalDuration = config.videoProperties.duration;
 
-    const extractStart = Date.now();
+    const timeTracker = new TimeTracker();
+    timeTracker.start();
     const promises = videoClips.map(async (clip) => {
         const frameOutputPath = getFramePath({ dir: tmpDir, format: imgType, frameName: clip.id });
 
@@ -29,7 +30,7 @@ const extractVideoFrames = async (config, imgType) => {
     });
 
     await Promise.all(promises);
-    print(`Video frames extraction took ${Date.now() - extractStart} ms`);
+    timeTracker.log('Frames extracted from videos');
 
     return getFramePath({
         dir: tmpDir,

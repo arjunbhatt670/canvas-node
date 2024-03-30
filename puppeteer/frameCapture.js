@@ -9,37 +9,39 @@ const frame2Video = require("../frame2Video");
 const { getConfig } = require("../service");
 const { extractVideoFrames } = require("../pixiUtils");
 const { finalsPath } = require("../path");
-const { print } = require("../utils");
+const { print, TimeTracker } = require("../utils");
 
 (async () => {
     const tempPaths = [];
+    const timeTracker = new TimeTracker();
+    const totalTimeTracker = new TimeTracker();
 
     const { data: rawConfig, downloadedData: config } = await getConfig();
     const videoFramesTempPath = await extractVideoFrames(config, 'png');
-
     tempPaths.push(videoFramesTempPath);
 
-    const totalTimeStart = Date.now();
-    const puppeteerLoadStart = Date.now();
+    totalTimeTracker.start();
 
+    timeTracker.start()
     const puppeteer = new Puppeteer();
     const page = await puppeteer.init();
-    await page.goto("http://localhost:3000/");
+    await page.goto("http://localhost:3000/", {
+        waitUntil: 'domcontentloaded'
+    });
 
-    console.log(`Time taken by puppeteer to load page ${Date.now() - puppeteerLoadStart} ms`);
+    timeTracker.log('[Puppeteer] Page loaded');
 
-    const reactRunStart = Date.now();
-
+    timeTracker.start()
     /** wait for page to be ready to use react */
     await page.evaluate(function () {
         window.isHeadLess = true;
         return new Promise((resolve) => document.addEventListener('app-mounted', resolve));
     });
 
-    console.log(`React init took ${Date.now() - reactRunStart} ms`);
 
-    const assetsLoadStart = Date.now();
+    timeTracker.log('React initialization completed');
 
+    timeTracker.start();
     /** Pass the media config to the application using window object  */
     await page.evaluate(function (payload) {
         window.onPayload(payload);
@@ -47,7 +49,7 @@ const { print } = require("../utils");
         return new Promise((resolve) => document.addEventListener('assets-loaded', resolve))
     }, rawConfig);
 
-    print(`Time taken by puppeteer to load initial assets required - ${Date.now() - assetsLoadStart} ms`);
+    timeTracker.log('[Puppeteer] Initial assets loaded');
 
 
     const totalFrames = (config.videoProperties.duration * config.videoProperties.frameRate) / 1000;
@@ -55,34 +57,44 @@ const { print } = require("../utils");
     const inputStream = new Readable({
         read: () => { }
     });
-    let time = {
+    const loopTimeTracker = new TimeTracker();
+    const evalTracker = new TimeTracker();
+    const time = {
         draw: 0,
         extract: 0,
-        total: Date.now(),
         communication: 0,
     };
 
+
+    const ffmpegTimeTracker = new TimeTracker();
+    ffmpegTimeTracker.start();
     frame2Video(inputStream, config.videoProperties.frameRate, `${finalsPath}/output_pup_60s.mp4`).then(() => {
-        print(`Total Time - ${Date.now() - totalTimeStart} ms`)
+        ffmpegTimeTracker.log('[ffmpeg] Final video generated');
+        totalTimeTracker.log('Total Time');
     });
 
-    while (currentFrame <= totalFrames) {
-        const communicationStart = Date.now();
-        const { baseData, time: { drawTime, extractTime, communicationTime, communicationEnd } } = await page.evaluate(
-            function (currentFrame, communicationStart) {
-                let communicationTime = (Date.now() - communicationStart);
+    ffmpegTimeTracker.pause();
+    loopTimeTracker.start();
+    while (currentFrame <= totalFrames + 1) {
+        evalTracker.start();
+        const { url, time: { drawTime, extractTime, evalTime } } = await page.evaluate(
+            function (currentFrame) {
+                const evalStart = Date.now();
                 return new Promise((resolve) => {
                     let drawTime = Date.now();
                     document.addEventListener('canvas-seeked', function seeked() {
                         drawTime = Date.now() - drawTime;
                         let extractTime = Date.now();
+                        if (currentFrame === 1) {
+                            resolve({ url: null, time: {} });
+                            document.removeEventListener('canvas-seeked', seeked);
+                        }
 
                         const dataUrl = window.pixiApp.view.toDataURL('image/jpeg', 1);
 
                         extractTime = Date.now() - extractTime;
 
-                        const communicationEnd = Date.now();
-                        resolve({ baseData: dataUrl, time: { drawTime, extractTime, communicationTime, communicationEnd } });
+                        resolve({ url: dataUrl, time: { drawTime, extractTime, evalTime: Date.now() - evalStart } });
 
                         document.removeEventListener('canvas-seeked', seeked);
                     });
@@ -90,30 +102,32 @@ const { print } = require("../utils");
                     window.onFrameChange(currentFrame);
                 })
             },
-            currentFrame, communicationStart
+            currentFrame
         );
+
+        if (!url) { currentFrame++; continue; }
 
         time.draw += drawTime;
         time.extract += extractTime;
-        time.communication += communicationTime + (Date.now() - communicationEnd);
+        time.communication += (evalTracker.now() - evalTime);
 
         // fs.writeFileSync(`${rootPath}/puppeteerFrames/frame_${currentFrame}.jpeg`, url.split(';base64,').pop(), {
         //     encoding: 'base64'
         // })
 
-        const bufferCreationStart = Date.now();
-        const buffer = Buffer.from(baseData
+        timeTracker.start();
+        const buffer = Buffer.from(url
             // .split('base64,')[1]
             , "base64");
         inputStream.push(buffer); // 0.15ms
-        time.extract += (Date.now() - bufferCreationStart);
+        time.extract += timeTracker.now();
 
         currentFrame++;
     }
 
-    time.total = Date.now() - time.total;
+    ffmpegTimeTracker.resume();
     print(`Processed ${totalFrames} frames.`);
-    print(`Canvas drawing took ${time.total} ms. (Drawing - ${time.draw} ms) (Extract - ${time.extract} ms) (Communication - ${time.communication} ms)`);
+    print(`Frames iteration took ${loopTimeTracker.now()} ms. (Drawing - ${time.draw} ms) (Extract - ${time.extract} ms) (Communication - ${time.communication} ms)`);
 
     inputStream.push(null);
     await puppeteer.exit();

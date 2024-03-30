@@ -168,6 +168,58 @@ const Url = (url) => ({
   getFile: () => url.split('/').pop()
 })
 
+function TimeTracker() {
+  this.timeSpent = 0;
+  this.intermediatory = 0;
+  this.isPaused = false;
+  this.isStarted = false;
+
+  this.start = () => {
+    this.intermediatory = Date.now();
+    this.timeSpent = 0;
+    this.isPaused = false;
+    this.isStarted = true;
+  }
+
+  this.pause = () => {
+    if (this.isStarted && !this.isPaused) {
+      this.isPaused = true;
+      this.timeSpent += (Date.now() - this.intermediatory);
+    }
+  }
+
+  this.resume = () => {
+    if (this.isPaused && this.isStarted) {
+      this.isPaused = false;
+      this.intermediatory = Date.now();
+    }
+  }
+
+  this.finish = () => {
+    if (this.isStarted) {
+      this.isStarted = false;
+    }
+  }
+
+  this.now = () => {
+    if (!this.isStarted) return 0;
+
+    if (this.isPaused) {
+      return this.timeSpent;
+    }
+
+    this.timeSpent = this.timeSpent + (Date.now() - this.intermediatory);
+    this.intermediatory = Date.now();
+
+    return this.timeSpent;
+  }
+
+  this.log = (msg) => {
+    const time = this.now();
+    print(`${msg} - [${time} ms]`)
+  }
+}
+
 Function.prototype.myCall = function (obj, ...args) {
   const sym = Symbol();
   const obj2 = obj;
@@ -234,5 +286,6 @@ module.exports = {
   getFramePath,
   Url,
   getStreams,
-  print
+  print,
+  TimeTracker
 }

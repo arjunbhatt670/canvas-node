@@ -11,8 +11,12 @@ module.exports = function Puppeteer() {
         });
         const page = await this.browser.newPage();
         page
-            .on('console', message =>
-                console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`))
+            .on('console', message => {
+                const type = message.type();
+                if (['log', 'info', 'error'].includes(type)) {
+                    console.log(`${type.substring(0, 3).toUpperCase()} ${message.text()}`);
+                }
+            })
 
         return page;
     }
