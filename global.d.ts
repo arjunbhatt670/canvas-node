@@ -1,12 +1,10 @@
-import Ffmpeg from "fluent-ffmpeg";
-
 declare interface Clip {
   src: string;
   start: number;
   end?: number;
   duration: number;
   trim: number;
-  stream: Ffmpeg.FfprobeStream;
+  stream: any;
 }
 
 declare function MixAudio(audios: any, duration: string): void;
@@ -51,4 +49,6 @@ declare interface DataClip {
   };
   dynamicBackgroundColorEnabled?: boolean;
   dynamicBorderColorEnabled?: boolean;
+  htmlContent?: string;
+  verticalAlignment?: string;
 }

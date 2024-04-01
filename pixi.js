@@ -1,10 +1,11 @@
 const { Readable } = require('stream');
 const { exec } = require('child_process');
 const fs = require('fs');
+const { JSDOM } = require('jsdom');
 
 const PIXI = require('./pixi-node');
 const frame2Video = require('./frame2Video');
-const { getFramePath, Url, print, TimeTracker } = require('./utils');
+const { getFramePath, Url, print, TimeTracker, asyncIterable } = require('./utils');
 const { tmpDir, finalsPath } = require('./path');
 const { getVisibleObjects, extractVideoFrames } = require('./pixiUtils');
 const { getConfig } = require('./service');
@@ -31,7 +32,7 @@ const { getConfig } = require('./service');
         tempPaths.push(path);
         fs.writeFileSync(path, Buffer.from(clip.shapeInfo.shapeMediaUrl.split('base64,')[1], 'base64url'))
     })
-    timeTracker.now('Shapes extracted to file system');
+    timeTracker.log('Shapes extracted to file system');
 
     const imageClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'IMAGE_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
@@ -41,17 +42,19 @@ const { getConfig } = require('./service');
         tempPaths.push(path);
         fs.copyFileSync(clip.sourceUrl, path);
     })
-    timeTracker.now('Images extracted to file system');
+    timeTracker.log('Images extracted to file system');
 
 
     const totalFrames = (config.videoProperties.duration * config.videoProperties.frameRate) / 1000;
 
+    timeTracker.start();
     const app = new PIXI.Application({
         width: config.videoProperties.width,
         height: config.videoProperties.height,
         hello: true,
         antialias: true
     });
+    timeTracker.log('Pixi Application initialized');
 
     app.renderer.background.color = '#ffffff';
 
@@ -60,18 +63,19 @@ const { getConfig } = require('./service');
         skipDetections: true
     });
 
-    timeTracker.start
+    timeTracker.start();
     await PIXI.Assets.load(fs.readdirSync(tmpDir));
-    timeTracker.now('Assets loaded in pixi cache');
+    timeTracker.log('Assets loaded in pixi cache');
 
-    const inputStream = new Readable();
+    const inputStream = new Readable({
+        read: () => { }
+    });
     const statics = new Map();
     const loopTimeTracker = new TimeTracker();
     let time = {
         draw: 0,
         extract: 0,
     };
-    let currentFrame = 1;
 
     const ffmpegTimeTracker = new TimeTracker();
     ffmpegTimeTracker.start();
@@ -82,16 +86,16 @@ const { getConfig } = require('./service');
 
     ffmpegTimeTracker.pause();
     loopTimeTracker.start();
-    while (currentFrame <= totalFrames) {
+    for await (const currentFrame of asyncIterable(totalFrames)) {
         timeTracker.start();
         const currentTime = ((currentFrame - 1) * 1000) / config.videoProperties.frameRate;
-        const clips = getVisibleObjects(config, currentTime);
+        const visibleClipsInFrame = getVisibleObjects(config, currentTime);
 
         const container = new PIXI.Container();
         app.stage = container;
 
-        for (let clipIndex = 0; clipIndex < clips.length; clipIndex++) { // 5ms
-            const clip = clips[clipIndex];
+        for (let clipIndex = 0; clipIndex < visibleClipsInFrame.length; clipIndex++) { // 5ms
+            const clip = visibleClipsInFrame[clipIndex];
             const clipStartFrame = Math.round((clip.startOffSet * config.videoProperties.frameRate) / 1000);
 
             switch (clip.type) {
@@ -156,6 +160,29 @@ const { getConfig } = require('./service');
 
                     break;
                 }
+
+                case 'TEXT_CLIP': {
+                    if (statics.has(clip)) {
+                        container.addChild(statics.get(clip));
+                    } else {
+
+                        const dom = new JSDOM(clip.htmlContent);
+                        const elem = dom.window.document.body.getElementsByTagName('p')[0];
+                        const textContent = elem.innerHTML;
+
+                        const text = new PIXI.Text(textContent)
+
+                        text.x = clip.coordinates.x;
+                        text.y = clip.coordinates.y;
+                        // text.width = clip.coordinates.width;
+                        // text.height = clip.coordinates.height;
+
+                        statics.set(clip, text);
+                        container.addChild(text);
+                    }
+
+                    break;
+                }
             }
         }
 
@@ -169,7 +196,13 @@ const { getConfig } = require('./service');
         const bufferData = Buffer.from(baseData
             // .split('base64,')[1]
             , 'base64');
-        inputStream.push(bufferData); // 0.15ms
+
+        await new Promise((resolve) => {
+            setTimeout(() => {
+                inputStream.push(bufferData);
+                resolve();
+            })
+        })
 
         time.extract += timeTracker.now();
 
@@ -177,7 +210,6 @@ const { getConfig } = require('./service');
         //     encoding: 'base64'
         // })
 
-        currentFrame++;
     }
 
     inputStream.push(null);

@@ -36,7 +36,7 @@ app.get('/video-frame', express.json(), async (req, res) => {
     }));
 })
 
-app.post('/extract-video-frames', express.json(), async (req, res) => {
+app.get('/extract-video-frames', express.json(), async (req, res) => {
 
     const { downloadedData } = await getConfig();
 

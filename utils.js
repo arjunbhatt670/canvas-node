@@ -97,14 +97,19 @@ class PuppeteerMassScreenshots {
   }
 }
 
-const asyncIterable = (times) => ({
+const asyncIterable = (times, isMacro) => ({
   [Symbol.asyncIterator]() {
-    let i = 0;
+    let i = 1;
     return {
       next() {
-        const done = i === times;
+        const done = i > times;
         const value = done ? undefined : i++;
-        return Promise.resolve({ value, done });
+        return isMacro ?
+          new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({ value, done });
+            })
+          }) : Promise.resolve({ value, done });
       },
       return() {
         // This will be reached if the consumer called 'break' or 'return' early in the loop.
