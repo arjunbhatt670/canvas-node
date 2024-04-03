@@ -198,11 +198,13 @@ const getAudioFromTrack = async (track, videoProperties) => {
     const audioPromises = config.tracks.map((track) => getAudioFromTrack(track, config.videoProperties));
     const audios = (await Promise.all(audioPromises)).filter(Boolean);
 
+    if (!audios.length) return;
+
     timeTracker.log('Audios merged');
 
     timeTracker.start();
 
-    const finalAudioPath = `${finalsPath}/output_120s.mp3`;
+    const finalAudioPath = `${finalsPath}/output_shapes.mp3`;
     await mixAudios(audios, finalAudioPath, 'mp3');
 
     timeTracker.log('Audios mixed')

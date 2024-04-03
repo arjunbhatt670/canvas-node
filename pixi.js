@@ -1,7 +1,8 @@
+/* global window */
+
 const { Readable } = require('stream');
 const { exec } = require('child_process');
 const fs = require('fs');
-const { JSDOM } = require('jsdom');
 
 const PIXI = require('./pixi-node');
 const frame2Video = require('./frame2Video');
@@ -9,6 +10,8 @@ const { getFramePath, Url, print, TimeTracker, asyncIterable } = require('./util
 const { tmpDir, finalsPath } = require('./path');
 const { getVisibleObjects, extractVideoFrames } = require('./pixiUtils');
 const { getConfig } = require('./service');
+const Puppeteer = require("./puppeteer");
+require('./window-shim');
 
 (async () => {
     const tempPaths = [];
@@ -23,6 +26,11 @@ const { getConfig } = require('./service');
     tempPaths.push(videoFramesTempPath);
 
     totalTimeTracker.start();
+
+    timeTracker.start();
+    const puppeteer = new Puppeteer();
+    const page = await puppeteer.init();
+    timeTracker.log('Puppeteer loaded')
 
     const shapeClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'SHAPE_CLIP' ? clip : null)).flat(1).filter(Boolean);
 
@@ -44,6 +52,33 @@ const { getConfig } = require('./service');
     })
     timeTracker.log('Images extracted to file system');
 
+    const textClips = config.tracks.map((track) => track.clips.map((clip) => clip.type === 'TEXT_CLIP' ? clip : null)).flat(1).filter(Boolean);
+    if (textClips.length) {
+        timeTracker.start();
+        await page.addScriptTag({
+            path: './html2Image.js',
+        })
+        // await page.addStyleTag({
+        //     url: 'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap',
+        // })
+        timeTracker.log('Text clip dependencies loaded');
+    }
+    timeTracker.start();
+    await Promise.all(textClips.map(async (clip) => {
+        const dataUrl = await page.evaluate(function (htmlString, w, h) {
+            document.body.innerHTML = htmlString;
+            return window.html2Image.toPng(document.body, {
+                width: w,
+                height: h,
+            })
+        }, clip.htmlContent, clip.coordinates.width, clip.coordinates.height);
+
+        const path = `${tmpDir}/${clip.id}.png`;
+        tempPaths.push(path);
+        fs.writeFileSync(path, Buffer.from(dataUrl.split('base64,')[1], 'base64url'))
+    }));
+    timeTracker.log('Text snapshots extracted to file system');
+
 
     const totalFrames = (config.videoProperties.duration * config.videoProperties.frameRate) / 1000;
 
@@ -52,7 +87,8 @@ const { getConfig } = require('./service');
         width: config.videoProperties.width,
         height: config.videoProperties.height,
         hello: true,
-        antialias: true
+        antialias: true,
+        clearBeforeRender: true
     });
     timeTracker.log('Pixi Application initialized');
 
@@ -79,7 +115,7 @@ const { getConfig } = require('./service');
 
     const ffmpegTimeTracker = new TimeTracker();
     ffmpegTimeTracker.start();
-    frame2Video(inputStream, config.videoProperties.frameRate, process.env.OUTPUT ?? `${finalsPath}/output_pixi_60s.mp4`).then(() => {
+    frame2Video(inputStream, config.videoProperties.frameRate, process.env.OUTPUT ?? `${finalsPath}/pixi_shape.mp4`).then(() => {
         ffmpegTimeTracker.log('[ffmpeg] Final video generated');
         totalTimeTracker.log('Total Time');
     });
@@ -165,20 +201,16 @@ const { getConfig } = require('./service');
                     if (statics.has(clip)) {
                         container.addChild(statics.get(clip));
                     } else {
+                        const img = await PIXI.Assets.load(`${clip.id}.png`);
+                        const sprite = PIXI.Sprite.from(img);
 
-                        const dom = new JSDOM(clip.htmlContent);
-                        const elem = dom.window.document.body.getElementsByTagName('p')[0];
-                        const textContent = elem.innerHTML;
+                        sprite.x = clip.coordinates.x;
+                        sprite.y = clip.coordinates.y;
+                        sprite.width = clip.coordinates.width;
+                        sprite.height = clip.coordinates.height;
 
-                        const text = new PIXI.Text(textContent)
-
-                        text.x = clip.coordinates.x;
-                        text.y = clip.coordinates.y;
-                        // text.width = clip.coordinates.width;
-                        // text.height = clip.coordinates.height;
-
-                        statics.set(clip, text);
-                        container.addChild(text);
+                        statics.set(clip, sprite);
+                        container.addChild(sprite);
                     }
 
                     break;
@@ -218,6 +250,8 @@ const { getConfig } = require('./service');
     ffmpegTimeTracker.resume();
     print(`Processed ${totalFrames} frames.`);
     print(`Frames iteration took ${loopTimeTracker.now()} ms. (Drawing - ${time.draw} ms) (Extract - ${time.extract} ms)`);
+
+    await puppeteer.exit();
 
     /** Remove temp files */
     tempPaths.forEach((path) => {
