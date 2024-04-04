@@ -1,7 +1,7 @@
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static')
 const Puppeteer = require(".");
-const { PuppeteerMassScreenshots } = require('../utils');
+const { PuppeteerMassScreenshots } = require('../utilities/grains');
 
 const frameCapture = async () => {
     console.log('starting');

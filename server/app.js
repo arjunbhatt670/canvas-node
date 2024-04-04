@@ -3,10 +3,10 @@ const http = require("http");
 const app = express()
 const port = 8000;
 const server = http.Server(app);
-const { getFramePath } = require('../utils');
+const { getFramePath } = require('../utilities/grains');
 const { tmpDir } = require('../path');
 const { extractVideoFrames } = require('../video-generator/utils');
-const { getConfig } = require('../service');
+const getConfig = require('../utilities/getConfig');
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');

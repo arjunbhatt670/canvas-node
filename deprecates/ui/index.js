@@ -1,7 +1,7 @@
 const { createCanvas, loadImage } = require('canvas');
 const { exec } = require('child_process');
 const fs = require('fs');
-const { downloadResource } = require('./utils');
+const { downloadResource } = require('../../utilities/grains');
 
 // Canvas setup
 const canvas = createCanvas(800, 600);

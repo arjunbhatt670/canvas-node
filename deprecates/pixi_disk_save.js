@@ -1,7 +1,4 @@
 const fs = require('fs');
-const ffmpeg = require('fluent-ffmpeg')
-const ffmpegPath = require('ffmpeg-static').path;
-const { PassThrough } = require('stream');
 const { exec } = require('child_process');
 
 

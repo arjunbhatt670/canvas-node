@@ -6,7 +6,7 @@ import {
   asyncIterable,
   getFramePath,
   print,
-} from "#root/utils.js";
+} from "#root/utilities/grains.js";
 import { imgType } from "./config";
 
 import { type Application } from "@pixi/node";

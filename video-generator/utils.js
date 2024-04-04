@@ -1,7 +1,7 @@
 const { exec } = require('child_process');
 
-const video2Frame = require("../video2Frame");
-const { getFramePath, TimeTracker } = require('../utils');
+const video2Frame = require("../utilities/video2Frame");
+const { getFramePath, TimeTracker } = require('../utilities/grains');
 const { tmpDir } = require('../path');
 
 /**

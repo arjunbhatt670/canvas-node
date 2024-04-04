@@ -1,6 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
-const { print } = require('./utils');
+const { print } = require('./grains');
 
 /**
  * @returns {Promise<string | PassThrough>}

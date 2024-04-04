@@ -5,14 +5,16 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "pup": "OUTPUT=finals/output_pup.mp4 node puppeteer/frameCapture.js",
     "dev": "nodemon server/app.js",
-    "video": "OUTPUT=finals/output_pixi.mp4 ts-node video-generator/index.ts"
+    "video": "OUTPUT=finals/output_pixi.mp4 ts-node video-generator/index.ts",
+    "video-pupp": "OUTPUT=finals/output_pup.mp4 node puppeteer/frameCapture.js",
+    "audio": "OUTPUT=finals/output.mp3 ts-node audio-generator/index.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@pixi/node": "^7.3.0",
+    "@types/fluent-ffmpeg": "^2.1.24",
     "canvas": "^2.11.2",
     "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.2",

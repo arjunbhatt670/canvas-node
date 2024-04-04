@@ -2,11 +2,11 @@ import { Readable } from "stream";
 import { exec } from "child_process";
 import fs from "fs";
 
-import frame2Video from "#root/frame2Video.js";
-import { Url, print, TimeTracker } from "#root/utils.js";
-import { getConfig } from "#root/service.js";
+import frame2Video from "#root/utilities/frame2Video.js";
+import { Url, print, TimeTracker } from "#root/utilities/grains.js";
+import getConfig from "#root/utilities/getConfig.js";
 import Puppeteer from "#root/puppeteer/index.js";
-import { tmpDir, finalsPath } from "#root/path.js";
+import { tmpDir, finalsPath, rootPath } from "#root/path.js";
 
 import PIXI from "./pixi-node";
 import { extractVideoFrames } from "./utils";
@@ -72,7 +72,7 @@ const pixi = async () => {
   if (textClips.length) {
     timeTracker.start();
     await page.addScriptTag({
-      path: "./html2Image.js",
+      path: `${rootPath}/utilities/html2Image.js`,
     });
     // await page.addStyleTag({
     //     url: 'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap',

@@ -1,6 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
-const { print } = require('./utils');
+const { print } = require('./grains');
 
 module.exports = function frame2Video(inputStream, frameRate, outputPath) {
     return new Promise((resolve, reject) => {

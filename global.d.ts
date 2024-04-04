@@ -1,14 +1,3 @@
-declare interface Clip {
-  src: string;
-  start: number;
-  end?: number;
-  duration: number;
-  trim: number;
-  stream: any;
-}
-
-declare function MixAudio(audios: any, duration: string): void;
-
 declare interface Media {
   tracks: {
     id: string;

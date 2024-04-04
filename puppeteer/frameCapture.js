@@ -5,11 +5,11 @@ const { exec } = require('child_process');
 
 
 const Puppeteer = require(".");
-const frame2Video = require("#root/frame2Video.js");
-const { getConfig } = require("../service");
+const frame2Video = require("#root/utilities/frame2Video.js");
+const getConfig = require("../utilities/getConfig");
 const { extractVideoFrames } = require("../video-generator/utils");
 const { finalsPath } = require("../path");
-const { print, TimeTracker } = require("../utils");
+const { print, TimeTracker } = require("../utilities/grains");
 
 (async () => {
     const tempPaths = [];

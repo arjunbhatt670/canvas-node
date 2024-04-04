@@ -4,7 +4,7 @@ const { join } = require('path');
 const { PassThrough } = require('stream');
 const crypto = require('crypto');
 const ffmpeg = require("fluent-ffmpeg");
-const { assetsPath } = require('./path');
+const { assetsPath } = require('#root/path.js');
 
 async function downloadResource(url, dest) {
   return new Promise((resolve, reject) => {
