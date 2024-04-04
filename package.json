@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "pup": "OUTPUT=finals/output_pup.mp4 node puppeteer/frameCapture.js",
     "dev": "nodemon server/app.js",
-    "pixi": "OUTPUT=finals/output_pixi.mp4 node pixi.js"
+    "video": "OUTPUT=finals/output_pixi.mp4 ts-node video-generator/index.ts"
   },
   "author": "",
   "license": "ISC",
@@ -22,14 +22,19 @@
     "pixi-shim": "^2.4.1",
     "pixi.js-legacy": "^7.4.0",
     "puppeteer": "^22.0.0",
-    "tmp": "^0.2.1"
+    "tmp": "^0.2.1",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "body-parser": "^1.20.2",
     "eslint": "^8.56.0",
     "express": "^4.18.2",
     "nodemon": "^3.0.3",
+    "tslib": "^2.6.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.12"
+  },
+  "imports": {
+    "#root/*": "./*"
   }
 }

@@ -52,3 +52,7 @@ declare interface DataClip {
   htmlContent?: string;
   verticalAlignment?: string;
 }
+
+declare interface Window {
+  html2Image: any;
+}

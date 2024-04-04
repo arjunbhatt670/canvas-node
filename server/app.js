@@ -5,7 +5,7 @@ const port = 8000;
 const server = http.Server(app);
 const { getFramePath } = require('../utils');
 const { tmpDir } = require('../path');
-const { extractVideoFrames } = require('../pixiUtils');
+const { extractVideoFrames } = require('../video-generator/utils');
 const { getConfig } = require('../service');
 
 app.use((req, res, next) => {

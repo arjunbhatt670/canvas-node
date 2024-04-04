@@ -113,7 +113,7 @@ const asyncIterable = (times, isMacro) => ({
       },
       return() {
         // This will be reached if the consumer called 'break' or 'return' early in the loop.
-        return { done: true };
+        return Promise.resolve({ value: i, done: true });
       },
     };
   },
@@ -164,6 +164,9 @@ function getStreams(media) {
   )
 }
 
+/**
+ * @param {any}
+ */
 function getFramePath({ frame = '%d', format, dir, frameName }) {
   return [dir, `${frameName}_frame%d.${format}`].filter(Boolean).join('/').replace('%d', frame)
 }

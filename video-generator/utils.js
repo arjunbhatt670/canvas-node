@@ -1,8 +1,8 @@
 const { exec } = require('child_process');
 
-const video2Frame = require("./video2Frame");
-const { getFramePath, TimeTracker } = require('./utils');
-const { tmpDir } = require('./path');
+const video2Frame = require("../video2Frame");
+const { getFramePath, TimeTracker } = require('../utils');
+const { tmpDir } = require('../path');
 
 /**
  * @param {Media} config 

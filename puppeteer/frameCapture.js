@@ -5,9 +5,9 @@ const { exec } = require('child_process');
 
 
 const Puppeteer = require(".");
-const frame2Video = require("../frame2Video");
+const frame2Video = require("#root/frame2Video.js");
 const { getConfig } = require("../service");
-const { extractVideoFrames } = require("../pixiUtils");
+const { extractVideoFrames } = require("../video-generator/utils");
 const { finalsPath } = require("../path");
 const { print, TimeTracker } = require("../utils");
 
