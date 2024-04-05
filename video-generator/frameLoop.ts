@@ -1,15 +1,13 @@
-import PIXI from "@pixi/node";
+import PIXI, { type Application } from "./pixi-node";
 import { getVisibleObjects } from "./utils";
 import {
   TimeTracker,
   Url,
-  asyncIterable,
   getFramePath,
   print,
 } from "#root/utilities/grains.js";
 import { imgType } from "./config";
 
-import { type Application } from "@pixi/node";
 import { type Readable } from "stream";
 
 export const loop = async (
@@ -24,9 +22,10 @@ export const loop = async (
   const time = {
     draw: 0,
     extract: 0,
+    streamed: 0,
   };
 
-  for await (const currentFrame of asyncIterable(totalFrames)) {
+  async function draw(currentFrame: number) {
     timeTracker.start();
     const currentTime =
       ((currentFrame - 1) * 1000) / config.videoProperties.frameRate;
@@ -144,19 +143,37 @@ export const loop = async (
       "base64"
     );
 
-    await new Promise<void>((resolve) => {
-      setTimeout(() => {
-        inputStream.push(bufferData);
-        resolve();
-      });
-    });
-
     time.extract += timeTracker.now();
 
     // fs.writeFileSync(`${rootPath}/pixiFrames/frame_${currentFrame}.jpeg`, baseData.split(';base64,').pop(), {
     //     encoding: 'base64'
     // })
+
+    return bufferData;
   }
+
+  async function makeDraw(frame: number) {
+    if (frame > totalFrames) return;
+
+    const data = await draw(frame);
+
+    await new Promise<void>((resolve) => {
+      inputStream.on("data", async function handle() {
+        time.streamed += timeTracker.now();
+
+        inputStream.off("data", handle);
+
+        await makeDraw(++frame);
+
+        resolve();
+      });
+
+      timeTracker.start();
+      inputStream.push(data);
+    });
+  }
+
+  await makeDraw(1);
 
   print(`Processed ${totalFrames} frames.`);
   inputStream.push(null);

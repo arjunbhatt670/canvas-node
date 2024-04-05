@@ -152,7 +152,7 @@ const pixi = async () => {
   print(
     `Frames iteration took ${loopTimeTracker.now()} ms. (Drawing - ${
       time.draw
-    } ms) (Extract - ${time.extract} ms)`
+    } ms) (Extract - ${time.extract} ms) (Streamed - ${time.streamed} ms)`
   );
 
   await puppeteer.exit();
