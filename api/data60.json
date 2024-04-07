@@ -137,6 +137,31 @@
           "dynamicVideoEnabled": false
         }
       ]
+    },
+    {
+      "id": "94f3aefa-a3aa-4868-a779-02414913a4e9",
+      "clips": [
+        {
+          "id": "d0937beb-66c3-4691-8c57-06f838e3eb5a",
+          "type": "TEXT_CLIP",
+          "startOffSet": 0,
+          "duration": 60000,
+          "endOffSet": 2000,
+          "coordinates": {
+            "x": 10,
+            "y": 10,
+            "width": 400,
+            "height": 35
+          },
+          "opacity": 1,
+          "rotationAngle": 0,
+          "htmlContent": "<div style=\"width: 400px; height: 35px; word-break: break-word; overflow: hidden; display: flex; align-items: flex-start;; font-size: 14px; background-color: #00000000;\" data-entityid=\"text-layer-container\"><div><p style=\"margin-bottom: 0px; margin-top: 0px; font-family: Abril Fatface; line-height: 1.2\"><span style=\"font-family: Roboto; font-size: 24px; background: #1d4ed8\">There has to be something with a value</span></p></div></div>",
+          "verticalAlignment": "TOP",
+          "placeholders": [],
+          "backgroundColor": "#00000000",
+          "dynamicBackgroundColorEnabled": false
+        }
+      ]
     }
   ],
   "videoProperties": {

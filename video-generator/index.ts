@@ -71,12 +71,15 @@ const pixi = async () => {
 
   if (textClips.length) {
     timeTracker.start();
+    await page.addStyleTag({
+      url: `http://localhost:5173/roboto.css`,
+    });
+    await page.addStyleTag({
+      path: `${rootPath}/utilities/reset.css`,
+    });
     await page.addScriptTag({
       path: `${rootPath}/utilities/html2Image.js`,
     });
-    // await page.addStyleTag({
-    //     url: 'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap',
-    // })
     timeTracker.log("Text clip dependencies loaded");
   }
 
@@ -86,9 +89,11 @@ const pixi = async () => {
       const dataUrl = await page.evaluate(
         function (htmlString, w, h) {
           document.body.innerHTML = htmlString;
+
           return window.html2Image.toPng(document.body, {
             width: w,
             height: h,
+            quality: 1,
           });
         },
         clip.htmlContent!,
@@ -164,19 +169,3 @@ const pixi = async () => {
 };
 
 pixi();
-
-// const http = require("http");
-// const express = require('express');
-// const { imgType } = require('./pixi/config');
-// const expressApp = express()
-// const server = http.Server(expressApp);
-
-// expressApp.get('/', async (req, res) => {
-//     await pixi();
-
-//     return res.json();
-// })
-
-// server.listen(9100, () => {
-//     console.log(`Binded Port : ${9100}`);
-// });
