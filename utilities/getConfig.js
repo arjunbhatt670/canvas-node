@@ -4,7 +4,7 @@ const apiURL = "http://localhost:5173";
 
 module.exports = async function getConfig() {
 
-    const data = await fetch(`${apiURL}/data60.json`)
+    const data = await fetch(`${apiURL}/config.json`)
         .then((value) => value.json())
 
     const timeTracker = new TimeTracker();

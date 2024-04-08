@@ -2,14 +2,13 @@ const ffmpeg = require('fluent-ffmpeg')
 const ffmpegPath = require('ffmpeg-static');
 const { print } = require('./grains');
 
-module.exports = function frame2Video(inputStream, frameRate, outputPath) {
+module.exports = function frame2Video(inputStream, frameRate, output) {
     return new Promise((resolve, reject) => {
         const command = ffmpeg();
         command.setFfmpegPath(ffmpegPath);
         command
             .input(inputStream)
             .inputFPS(frameRate)
-            .output(outputPath)
             .videoCodec('libx264')
             .videoBitrate('1200k')
             .outputOptions([
@@ -25,11 +24,18 @@ module.exports = function frame2Video(inputStream, frameRate, outputPath) {
             })
             .on('end', () => {
                 print('ffmpeg process completed');
-                command.input(outputPath).ffprobe(function (err, metadata) {
+                command.input(output).ffprobe(function (err, metadata) {
                     console.log(metadata.format)
                 });
-                resolve();
-            })
-            .run()
+                resolve(output);
+            });
+
+        if (typeof output === 'string') {
+            command
+                .output(output)
+                .run();
+        } else {
+            command.pipe(output);
+        }
     })
 }

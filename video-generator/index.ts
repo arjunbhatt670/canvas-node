@@ -13,7 +13,7 @@ import { extractVideoFrames } from "./utils";
 import { loop } from "./frameLoop";
 import { imgType } from "./config.js";
 
-const pixi = async () => {
+export default async function core() {
   const tempPaths = [];
   const timeTracker = new TimeTracker();
   const totalTimeTracker = new TimeTracker();
@@ -126,23 +126,28 @@ const pixi = async () => {
   await PIXI.Assets.init({
     basePath: tmpDir,
     skipDetections: true,
+    preferences: {
+      preferCreateImageBitmap: true,
+    },
   });
 
   timeTracker.start();
-  await PIXI.Assets.load(fs.readdirSync(tmpDir));
+  const tempAssets = fs.readdirSync(tmpDir);
+  await PIXI.Assets.load(tempAssets);
   timeTracker.log("Assets loaded in pixi cache");
 
   const inputStream = new Readable({
     read: () => {},
   });
   const loopTimeTracker = new TimeTracker();
-
   const ffmpegTimeTracker = new TimeTracker();
+  const finalVideoPath = process.env.OUTPUT ?? `${finalsPath}/pixi_shape.mp4`;
+
   ffmpegTimeTracker.start();
   frame2Video(
     inputStream,
     config.videoProperties.frameRate,
-    process.env.OUTPUT ?? `${finalsPath}/pixi_shape.mp4`
+    finalVideoPath
   ).then(() => {
     ffmpegTimeTracker.log("[ffmpeg] Final video generated");
     totalTimeTracker.log("Total Time");
@@ -151,7 +156,6 @@ const pixi = async () => {
   ffmpegTimeTracker.pause();
   loopTimeTracker.start();
   const time = await loop(config, inputStream, app);
-  app.destroy();
 
   ffmpegTimeTracker.resume();
   print(
@@ -160,12 +164,19 @@ const pixi = async () => {
     } ms) (Extract - ${time.extract} ms) (Streamed - ${time.streamed} ms)`
   );
 
-  await puppeteer.exit();
-
   /** Remove temp files */
   tempPaths.forEach((path) => {
     exec(`rm -rf ${path}`);
   });
-};
 
-pixi();
+  app.destroy(true, {
+    children: true,
+    baseTexture: true,
+    texture: true,
+  });
+  await PIXI.Assets.unload(tempAssets);
+  await puppeteer.exit();
+  PIXI.Assets.reset();
+
+  return finalVideoPath;
+}
