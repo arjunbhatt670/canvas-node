@@ -1,18 +1,13 @@
 import PIXI, { type Application } from "./pixi-node";
 import { getVisibleObjects } from "./utils";
-import {
-  TimeTracker,
-  Url,
-  getFramePath,
-  print,
-} from "#root/utilities/grains.js";
+import { TimeTracker, Url, getFramePath, print } from "#root/utilities/grains";
 import { imgType } from "./config";
 
 import { type Readable } from "stream";
 
 export const loop = async (
   config: Media,
-  inputStream: Readable,
+  frameStream: Readable,
   pixiApp: Application
 ) => {
   const totalFrames =
@@ -158,10 +153,10 @@ export const loop = async (
     const data = await draw(frame);
 
     await new Promise<void>((resolve) => {
-      inputStream.on("data", async function handle() {
+      frameStream.on("data", async function handle() {
         time.streamed += timeTracker.now();
 
-        inputStream.off("data", handle);
+        frameStream.off("data", handle);
 
         await makeDraw(++frame);
 
@@ -169,14 +164,14 @@ export const loop = async (
       });
 
       timeTracker.start();
-      inputStream.push(data);
+      frameStream.push(data);
     });
   }
 
   await makeDraw(1);
 
   print(`Processed ${totalFrames} frames.`);
-  inputStream.push(null);
+  frameStream.push(null);
 
   return time;
 };

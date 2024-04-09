@@ -1,12 +1,14 @@
 import express from "express";
 import http from "http";
-import fs from "fs";
+import { Readable } from "stream";
+import { performance } from "node:perf_hooks";
 
-import { getFramePath } from "../utilities/grains";
+import { TimeTracker, getFramePath } from "../utilities/grains";
 import { tmpDir } from "../path";
-import { extractVideoFrames } from "../video-generator/utils";
+import { extractVideoClipFrames } from "../video-generator/utils";
 import getConfig from "../utilities/getConfig";
-import core from "../video-generator";
+import frame2Video from "#root/utilities/frame2Video";
+import createFrames from "#root/video-generator/createFrames";
 
 const app = express();
 const port = 8000;
@@ -47,9 +49,22 @@ app.get("/video-frame", express.json(), async (req, res) => {
 });
 
 app.get("/extract-video-frames", express.json(), async (req, res) => {
-  const { downloadedData } = await getConfig();
+  const { downloadedData: config } = await getConfig();
 
-  await extractVideoFrames(downloadedData, "png");
+  const videoClips = config.tracks
+    .map((track) => track.clips.filter((clip) => clip.type === "VIDEO_CLIP"))
+    .flat(1)
+    .filter(Boolean);
+
+  await Promise.all(
+    videoClips.map((clip) =>
+      extractVideoClipFrames(clip, {
+        frameImageType: "png",
+        frameRate: config.videoProperties.frameRate,
+        maxDuration: config.videoProperties.duration,
+      })
+    )
+  );
 
   res.json({
     ok: true,
@@ -57,15 +72,28 @@ app.get("/extract-video-frames", express.json(), async (req, res) => {
 });
 
 app.get("/video", express.json(), async (req, res) => {
-  const videoPath = await core();
-  console.log(videoPath);
-  const stream = fs.createReadStream(videoPath);
+  const { downloadedData: config } = await getConfig();
+  const totalTimeTracker = new TimeTracker();
+  const frameStream = new Readable({
+    read: () => {},
+  });
+
+  totalTimeTracker.start();
+
+  frame2Video(frameStream, config.videoProperties.frameRate).then(
+    (videoStream) => {
+      videoStream.on("close", () => {
+        totalTimeTracker.log("Total Time");
+      });
+      videoStream.pipe(res);
+    }
+  );
+
+  createFrames(config, frameStream);
 
   res.setHeader("Accept-Ranges", "bytes");
-  res.setHeader("Content-Type", "video/mp4");
+  //   res.setHeader("Content-Type", "video/mp4");
   res.setHeader("Content-Disposition", 'filename="video.mp4"');
-
-  stream.pipe(res);
 });
 
 server.listen(port, () => {

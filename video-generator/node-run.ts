@@ -1,5 +1,8 @@
-import core from ".";
+import getConfig from "#root/utilities/getConfig";
+import start from "./start";
 
 (async () => {
-  await core();
+  const { downloadedData: config } = await getConfig();
+
+  start(config);
 })();

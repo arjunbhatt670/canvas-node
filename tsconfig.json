@@ -23,7 +23,7 @@
     "importHelpers": true,
     "outDir": "dist",
     "lib": ["DOM"],
-    "paths": { "#root/*": ["./*"] }
+    "paths": { "#root/*": ["./*.ts"] }
     // typescript options here
   }
 }

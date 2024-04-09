@@ -2,9 +2,9 @@ import ffmpeg from "fluent-ffmpeg";
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs";
 
-import { getStreams, print, TimeTracker } from "#root/utilities/grains.js";
-import { tmpDir } from "#root/path.js";
-import getConfig from "#root/utilities/getConfig.js";
+import { getStreams, print, TimeTracker } from "#root/utilities/grains";
+import { tmpDir } from "#root/path";
+import getConfig from "#root/utilities/getConfig";
 
 import { Clip, MixAudio } from "./types";
 
