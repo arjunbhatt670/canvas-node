@@ -185,8 +185,12 @@ class TimeTracker {
     this.isStarted = false;
   }
 
+  stampNow() {
+    return Math.ceil(performance.now());
+  }
+
   start() {
-    this.intermediatory = Date.now();
+    this.intermediatory = this.stampNow();
     this.timeSpent = 0;
     this.isPaused = false;
     this.isStarted = true;
@@ -195,14 +199,14 @@ class TimeTracker {
   pause() {
     if (this.isStarted && !this.isPaused) {
       this.isPaused = true;
-      this.timeSpent += Date.now() - this.intermediatory;
+      this.timeSpent += this.stampNow() - this.intermediatory;
     }
   }
 
   resume() {
     if (this.isPaused && this.isStarted) {
       this.isPaused = false;
-      this.intermediatory = Date.now();
+      this.intermediatory = this.stampNow();
     }
   }
 
@@ -219,8 +223,8 @@ class TimeTracker {
       return this.timeSpent;
     }
 
-    this.timeSpent = this.timeSpent + (Date.now() - this.intermediatory);
-    this.intermediatory = Date.now();
+    this.timeSpent = this.timeSpent + (this.stampNow() - this.intermediatory);
+    this.intermediatory = this.stampNow();
 
     return this.timeSpent;
   }

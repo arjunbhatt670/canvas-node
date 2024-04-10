@@ -8,10 +8,17 @@ import { type Readable } from "stream";
 export const loop = async (
   config: Media,
   frameStream: Readable,
-  pixiApp: Application
+  pixiApp: Application,
+  limit: {
+    start: number;
+    duration: number;
+  }
 ) => {
   const totalFrames =
-    (config.videoProperties.duration * config.videoProperties.frameRate) / 1000;
+    (limit.duration * config.videoProperties.frameRate) / 1000;
+  const startFrame =
+    1 + (limit.start * config.videoProperties.frameRate) / 1000;
+  const endFrame = startFrame - 1 + totalFrames;
   const timeTracker = new TimeTracker();
   const statics = new Map();
   const time = {
@@ -148,7 +155,7 @@ export const loop = async (
   }
 
   async function makeDraw(frame: number) {
-    if (frame > totalFrames) return;
+    if (frame > endFrame) return;
 
     const data = await draw(frame);
 
@@ -168,7 +175,7 @@ export const loop = async (
     });
   }
 
-  await makeDraw(1);
+  await makeDraw(startFrame);
 
   print(`Processed ${totalFrames} frames.`);
   frameStream.push(null);

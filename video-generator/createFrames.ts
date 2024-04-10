@@ -13,13 +13,24 @@ import { imgType } from "./config.js";
 
 export default async function createFrames(
   config: Media,
-  frameStream: Readable
+  frameStream: Readable,
+  limit: {
+    start: number;
+    duration: number;
+  }
 ) {
   const tempPaths = [];
   const timeTracker = new TimeTracker();
 
   const videoClips = config.tracks
-    .map((track) => track.clips.filter((clip) => clip.type === "VIDEO_CLIP"))
+    .map((track) =>
+      track.clips.filter(
+        (clip) =>
+          clip.type === "VIDEO_CLIP" &&
+          clip.startOffSet < limit.start + limit.duration &&
+          clip.startOffSet + clip.duration >= limit.start
+      )
+    )
     .flat(1)
     .filter(Boolean);
   timeTracker.start();
@@ -28,7 +39,8 @@ export default async function createFrames(
       extractVideoClipFrames(clip, {
         frameImageType: imgType,
         frameRate: config.videoProperties.frameRate,
-        maxDuration: config.videoProperties.duration,
+        maxDuration: limit.duration,
+        strictStart: limit.start,
       })
     )
   );
@@ -47,7 +59,14 @@ export default async function createFrames(
   timeTracker.log("\n\nPuppeteer loaded");
 
   const shapeClips = config.tracks
-    .map((track) => track.clips.filter((clip) => clip.type === "SHAPE_CLIP"))
+    .map((track) =>
+      track.clips.filter(
+        (clip) =>
+          clip.type === "SHAPE_CLIP" &&
+          clip.startOffSet < limit.start + limit.duration &&
+          clip.startOffSet + clip.duration >= limit.start
+      )
+    )
     .flat(1)
     .filter(Boolean);
 
@@ -67,7 +86,14 @@ export default async function createFrames(
   timeTracker.log("Shapes extracted to file system");
 
   const imageClips = config.tracks
-    .map((track) => track.clips.filter((clip) => clip.type === "IMAGE_CLIP"))
+    .map((track) =>
+      track.clips.filter(
+        (clip) =>
+          clip.type === "IMAGE_CLIP" &&
+          clip.startOffSet < limit.start + limit.duration &&
+          clip.startOffSet + clip.duration >= limit.start
+      )
+    )
     .flat(1)
     .filter(Boolean);
 
@@ -80,7 +106,14 @@ export default async function createFrames(
   timeTracker.log("Images extracted to file system");
 
   const textClips = config.tracks
-    .map((track) => track.clips.filter((clip) => clip.type === "TEXT_CLIP"))
+    .map((track) =>
+      track.clips.filter(
+        (clip) =>
+          clip.type === "TEXT_CLIP" &&
+          clip.startOffSet < limit.start + limit.duration &&
+          clip.startOffSet + clip.duration >= limit.start
+      )
+    )
     .flat(1)
     .filter(Boolean);
 
@@ -154,7 +187,7 @@ export default async function createFrames(
   const loopTimeTracker = new TimeTracker();
 
   loopTimeTracker.start();
-  const time = await loop(config, frameStream, app);
+  const time = await loop(config, frameStream, app, limit);
 
   print(
     `Frames iteration took ${loopTimeTracker.now()} ms. (Drawing - ${

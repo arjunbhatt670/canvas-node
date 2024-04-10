@@ -21,5 +21,8 @@ export default async function start(config: Media) {
     totalTimeTracker.log("Total Time");
   });
 
-  createFrames(config, frameStream);
+  createFrames(config, frameStream, {
+    duration: Number(process.env.duration ?? 20000),
+    start: Number(process.env.start ?? 10000),
+  });
 }

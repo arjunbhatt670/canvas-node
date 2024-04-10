@@ -4,9 +4,14 @@ import { tmpDir } from "../path";
 
 const extractVideoClipFrames = async (
   clip: DataClip,
-  options: { frameRate: number; maxDuration: number; frameImageType: string }
+  options: {
+    frameRate: number;
+    maxDuration: number;
+    frameImageType: string;
+    strictStart: number;
+  }
 ): Promise<string> => {
-  const { frameImageType, frameRate, maxDuration } = options;
+  const { frameImageType, frameRate, maxDuration, strictStart } = options;
 
   const frameOutputPath = getFramePath({
     dir: tmpDir,
@@ -15,13 +20,14 @@ const extractVideoClipFrames = async (
   });
 
   return video2Frame(clip.sourceUrl, frameOutputPath, {
-    startTime: (clip.trimOffset || 0) / 1000,
+    startTime: ((clip.trimOffset || 0) + strictStart) / 1000,
     frameRate,
     height: clip.coordinates.height,
     width: clip.coordinates.width,
     frameCount: Math.ceil(
       (Math.min(clip.duration, maxDuration) * frameRate) / 1000
     ),
+    frameCountStart: 1 + (strictStart * frameRate) / 1000,
   });
 };
 

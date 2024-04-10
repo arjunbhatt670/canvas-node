@@ -6,7 +6,7 @@ const { print } = require('./grains');
  * @returns {Promise<string | PassThrough>}
  */
 module.exports = async function video2Frame(inputVideo, output, inputOptions) {
-    const { startTime = 0, frameRate, width, height, frameCount } = inputOptions;
+    const { startTime = 0, frameRate, width, height, frameCount, frameCountStart } = inputOptions;
 
     return new Promise((resolve) => {
         const ffmpegCommand = ffmpeg();
@@ -22,7 +22,8 @@ module.exports = async function video2Frame(inputVideo, output, inputOptions) {
                 `-vf fps=${frameRate}`,
                 `-vf scale=${width ?? -1}:${height ?? -1}`,
                 `-vframes ${frameCount}`,
-                '-q:v 1'
+                '-q:v 1',
+                `-start_number ${frameCountStart ?? 1}`
             ])
             .on('start', () => {
                 print(`frame extraction for ${inputVideo} started`);
