@@ -2,8 +2,8 @@ import { Readable } from "stream";
 
 import { videoSegmentsPath } from "#root/path";
 import createFrames from "./createFrames";
-import frame2Video from "#root/utilities/frame2Video";
 import { getMediaMetaData } from "#root/utilities/grains";
+import frame2VideoSpawn from "#root/utilities/frame2VideoSpawn";
 
 export default function start(
   config: Media,
@@ -18,16 +18,15 @@ export default function start(
     const outputVideoPath =
       process.env.OUTPUT || `${videoSegmentsPath}/pixi_shape${start}.mp4`;
 
-    frame2Video(
+    frame2VideoSpawn(
       frameStream,
       config.videoProperties.frameRate,
       outputVideoPath
     ).then(() => {
-      resolve();
       getMediaMetaData(outputVideoPath).then((meta) => {
         console.log(process.pid, meta);
-        process.exit();
       });
+      resolve();
     });
 
     createFrames(config, frameStream, {

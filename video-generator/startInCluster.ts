@@ -45,20 +45,21 @@ export default async function startInCluster() {
       });
     }
 
-    let exitedWorkers = 0;
+    let disconnectedWorkersCount = 0;
     cluster.on("exit", (worker, code, signal) => {
-      exitedWorkers++;
-
-      if (exitedWorkers === totalCPUs) {
-        totalTimeTracker.log("Total Time");
-        exec(`rm -rf ${textClipsAssets}`);
-      }
-
       console.log(
         `worker ${worker.process.pid} died`,
         `Code - ${code}`,
         `Signal - ${signal}`
       );
+    });
+
+    cluster.on("disconnect", (worker) => {
+      disconnectedWorkersCount++;
+      if (disconnectedWorkersCount === totalCPUs) {
+        totalTimeTracker.log("Total Time");
+        exec(`rm -rf ${textClipsAssets}`);
+      }
     });
   } else {
     console.log(`Worker with id ${process.pid} started`);
@@ -74,7 +75,7 @@ export default async function startInCluster() {
     );
     timeTracker.log(`Cluster Total time with start ${process.env.start}`);
 
-    // process.exit();
+    cluster.worker?.disconnect();
   }
 }
 
