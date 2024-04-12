@@ -5,6 +5,8 @@ import { join } from "path";
 import { PassThrough } from "stream";
 import crypto from "crypto";
 import ffmpeg from "fluent-ffmpeg";
+import { execSync } from "child_process";
+
 import { assetsPath } from "#root/path";
 
 async function downloadResource(url, dest) {
@@ -288,7 +290,34 @@ Array.prototype.myForEach = function (callback) {
   });
 };
 
-const print = (value) => process.stdout.write(value + "\n");
+const print = (value) =>
+  process.stdout.write(`[${process.env.start || "master"}] ${value}\n`);
+
+const getMediaMetaData = (path: string) =>
+  new Promise((res) => {
+    ffmpeg.ffprobe(path, function (err, metadata) {
+      res(metadata.format);
+    });
+  });
+
+const writeFileIntoText = (
+  fromDir: string,
+  fileType: "mp4" | "mov" | "mkv",
+  textFilePath: string
+) => {
+  const files = execSync(`ls ${fromDir}/*.${fileType} | sort -V`)
+    .toString()
+    .trim()
+    .split("\n");
+
+  const stream = fs.createWriteStream(textFilePath);
+  files.forEach((file) => {
+    stream.write(`file '${file}'\n`);
+  });
+  stream.end();
+
+  print(`${textFilePath} has been generated successfully.`);
+};
 
 export {
   downloadResource,
@@ -302,4 +331,6 @@ export {
   getStreams,
   print,
   TimeTracker,
+  getMediaMetaData,
+  writeFileIntoText,
 };

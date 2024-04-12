@@ -38,9 +38,6 @@ export default function frame2Video(
       .on("end", () => {
         print("ffmpeg process completed");
         if (typeof output === "string") {
-          command.input(output).ffprobe(function (err, metadata) {
-            console.log(metadata.format);
-          });
           resolve(output);
         }
       });

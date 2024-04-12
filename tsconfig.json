@@ -22,7 +22,7 @@
     "allowJs": true,
     "importHelpers": true,
     "outDir": "dist",
-    "lib": ["DOM"],
+    "lib": ["DOM", "es2021"],
     "paths": { "#root/*": ["./*.ts"] }
     // typescript options here
   }

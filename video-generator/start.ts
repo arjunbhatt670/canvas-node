@@ -1,28 +1,38 @@
 import { Readable } from "stream";
 
-import { finalsPath } from "#root/path";
+import { videoSegmentsPath } from "#root/path";
 import createFrames from "./createFrames";
 import frame2Video from "#root/utilities/frame2Video";
-import { TimeTracker } from "#root/utilities/grains";
+import { getMediaMetaData } from "#root/utilities/grains";
 
-export default async function start(config: Media) {
-  const totalTimeTracker = new TimeTracker();
+export default function start(
+  config: Media,
+  start: number = 0,
+  duration: number = config.videoProperties.duration
+) {
   const frameStream = new Readable({
     read: () => {},
   });
 
-  totalTimeTracker.start();
+  return new Promise<void>((resolve) => {
+    const outputVideoPath =
+      process.env.OUTPUT || `${videoSegmentsPath}/pixi_shape${start}.mp4`;
 
-  frame2Video(
-    frameStream,
-    config.videoProperties.frameRate,
-    process.env.OUTPUT || `${finalsPath}/pixi_shape.mp4`
-  ).then(() => {
-    totalTimeTracker.log("Total Time");
-  });
+    frame2Video(
+      frameStream,
+      config.videoProperties.frameRate,
+      outputVideoPath
+    ).then(() => {
+      resolve();
+      getMediaMetaData(outputVideoPath).then((meta) => {
+        console.log(process.pid, meta);
+        process.exit();
+      });
+    });
 
-  createFrames(config, frameStream, {
-    duration: Number(process.env.duration ?? 20000),
-    start: Number(process.env.start ?? 10000),
+    createFrames(config, frameStream, {
+      duration,
+      start,
+    });
   });
 }

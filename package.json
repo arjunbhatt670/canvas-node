@@ -8,6 +8,7 @@
     "dev": "nodemon server/app.ts",
     "debug": "nodemon --exec \"node --inspect=0.0.0.0:9229 --require ts-node/register --watch server/app.ts\"",
     "video": "OUTPUT=finals/output_pixi.mp4 ts-node video-generator/node-run.ts",
+    "video-cluster": "ts-node video-generator/startInCluster.ts && npm run merge-videos",
     "video-con": "concurrently \"npm:video1\" \"npm:video2\" \"npm:video3\" \"npm:video4\" \"npm:video5\" \"npm:video6\"",
     "video1": "OUTPUT=finals/output_pixi1.mp4 start=0 duration=10000 ts-node video-generator/node-run.ts",
     "video2": "OUTPUT=finals/output_pixi2.mp4 start=10000 duration=10000 ts-node video-generator/node-run.ts",
@@ -16,7 +17,8 @@
     "video5": "OUTPUT=finals/output_pixi5.mp4 start=40000 duration=10000 ts-node video-generator/node-run.ts",
     "video6": "OUTPUT=finals/output_pixi6.mp4 start=50000 duration=10000 ts-node video-generator/node-run.ts",
     "video-pupp": "OUTPUT=finals/output_pup.mp4 node puppeteer/frameCapture.js",
-    "audio": "OUTPUT=finals/output.mp3 ts-node audio-generator/index.ts"
+    "audio": "OUTPUT=finals/output.mp3 ts-node audio-generator/index.ts",
+    "merge-videos": "OUTPUT=finals/merge.mp4 ts-node video-generator/mergeVideos.ts"
   },
   "author": "",
   "license": "ISC",

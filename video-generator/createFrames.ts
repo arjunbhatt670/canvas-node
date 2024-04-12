@@ -3,13 +3,18 @@ import fs from "fs";
 import { type Readable } from "stream";
 
 import { Url, print, TimeTracker, getFramePath } from "#root/utilities/grains";
-import Puppeteer from "#root/puppeteer/index";
-import { tmpDir, rootPath } from "#root/path";
+import { tmpDir as staticDir } from "#root/path";
 
 import PIXI from "./pixi-node";
 import { extractVideoClipFrames } from "./utils";
 import { loop } from "./frameLoop";
 import { imgType } from "./config.js";
+
+const createTmpDir = (staticDir: string, variable: string | number) => {
+  const dir = `${staticDir}/${variable}`;
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+  return dir;
+};
 
 export default async function createFrames(
   config: Media,
@@ -19,8 +24,13 @@ export default async function createFrames(
     duration: number;
   }
 ) {
-  const tempPaths = [];
   const timeTracker = new TimeTracker();
+
+  timeTracker.start();
+  const tmpDir = createTmpDir(staticDir, limit.start);
+  timeTracker.log(`Created temporary directory ${tmpDir}`);
+
+  const tempPaths = [tmpDir];
 
   const videoClips = config.tracks
     .map((track) =>
@@ -31,18 +41,21 @@ export default async function createFrames(
           clip.startOffSet + clip.duration >= limit.start
       )
     )
-    .flat(1)
-    .filter(Boolean);
+    .flat(1);
   timeTracker.start();
   await Promise.all(
-    videoClips.map((clip) =>
-      extractVideoClipFrames(clip, {
-        frameImageType: imgType,
+    videoClips.map((clip) => {
+      const frameOutputPath = getFramePath({
+        dir: tmpDir,
+        format: imgType,
+        frameName: clip.id,
+      });
+      return extractVideoClipFrames(clip, {
+        frameOutputPath,
         frameRate: config.videoProperties.frameRate,
-        maxDuration: limit.duration,
-        strictStart: limit.start,
-      })
-    )
+        limit,
+      });
+    })
   );
   const videoFramesTempPath = getFramePath({
     dir: tmpDir,
@@ -50,13 +63,9 @@ export default async function createFrames(
     frameName: "**",
     frame: "**",
   });
+
   tempPaths.push(videoFramesTempPath);
   timeTracker.log("Frames extracted from videos");
-
-  timeTracker.start();
-  const puppeteer = new Puppeteer();
-  const page = await puppeteer.init();
-  timeTracker.log("\n\nPuppeteer loaded");
 
   const shapeClips = config.tracks
     .map((track) =>
@@ -67,8 +76,7 @@ export default async function createFrames(
           clip.startOffSet + clip.duration >= limit.start
       )
     )
-    .flat(1)
-    .filter(Boolean);
+    .flat(1);
 
   timeTracker.start();
   shapeClips.map((clip) => {
@@ -94,8 +102,7 @@ export default async function createFrames(
           clip.startOffSet + clip.duration >= limit.start
       )
     )
-    .flat(1)
-    .filter(Boolean);
+    .flat(1);
 
   timeTracker.start();
   imageClips.map((clip) => {
@@ -114,49 +121,14 @@ export default async function createFrames(
           clip.startOffSet + clip.duration >= limit.start
       )
     )
-    .flat(1)
-    .filter(Boolean);
-
-  if (textClips.length) {
-    timeTracker.start();
-    await page.addStyleTag({
-      url: `http://localhost:5173/roboto.css`,
-    });
-    await page.addStyleTag({
-      path: `${rootPath}/utilities/reset.css`,
-    });
-    await page.addScriptTag({
-      path: `${rootPath}/utilities/html2Image.js`,
-    });
-    timeTracker.log("Text clip dependencies loaded");
-  }
+    .flat(1);
 
   timeTracker.start();
-  await Promise.all(
-    textClips.map(async (clip) => {
-      const dataUrl = await page.evaluate(
-        function (htmlString, w, h) {
-          document.body.innerHTML = htmlString;
-
-          return window.html2Image.toPng(document.body, {
-            width: w,
-            height: h,
-            quality: 1,
-          });
-        },
-        clip.htmlContent!,
-        clip.coordinates.width,
-        clip.coordinates.height
-      );
-
-      const path = `${tmpDir}/${clip.id}.png`;
-      tempPaths.push(path);
-      fs.writeFileSync(
-        path,
-        Buffer.from(dataUrl.split("base64,")[1], "base64url")
-      );
-    })
-  );
+  textClips.map((clip) => {
+    const path = `${tmpDir}/${clip.id}.png`;
+    tempPaths.push(path);
+    fs.copyFileSync(`${staticDir}/${clip.id}.png`, path);
+  });
   timeTracker.log("Text snapshots extracted to file system");
 
   timeTracker.start();
@@ -206,6 +178,5 @@ export default async function createFrames(
     texture: true,
   });
   await PIXI.Assets.unload(tempAssets);
-  await puppeteer.exit();
   PIXI.Assets.reset();
 }

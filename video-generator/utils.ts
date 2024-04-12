@@ -1,33 +1,39 @@
-import video2Frame from "../utilities/video2Frame";
-import { getFramePath, TimeTracker } from "../utilities/grains";
-import { tmpDir } from "../path";
+import video2Frame from "#root/utilities/video2Frame";
 
 const extractVideoClipFrames = async (
   clip: DataClip,
   options: {
     frameRate: number;
-    maxDuration: number;
-    frameImageType: string;
-    strictStart: number;
+    frameOutputPath: string;
+    limit: {
+      start: number;
+      duration: number;
+    };
   }
-): Promise<string> => {
-  const { frameImageType, frameRate, maxDuration, strictStart } = options;
-
-  const frameOutputPath = getFramePath({
-    dir: tmpDir,
-    format: frameImageType,
-    frameName: clip.id,
-  });
+) => {
+  const { frameOutputPath, frameRate, limit } = options;
 
   return video2Frame(clip.sourceUrl, frameOutputPath, {
-    startTime: ((clip.trimOffset || 0) + strictStart) / 1000,
+    startTime:
+      ((clip.trimOffset || 0) + Math.max(limit.start - clip.startOffSet, 0)) /
+      1000,
     frameRate,
     height: clip.coordinates.height,
     width: clip.coordinates.width,
     frameCount: Math.ceil(
-      (Math.min(clip.duration, maxDuration) * frameRate) / 1000
+      ((Math.min(
+        clip.startOffSet + clip.duration,
+        limit.start + limit.duration
+      ) -
+        Math.max(limit.start, clip.startOffSet)) *
+        frameRate) /
+        1000
     ),
-    frameCountStart: 1 + (strictStart * frameRate) / 1000,
+    frameCountStart:
+      1 +
+      Math.round(
+        (Math.max(limit.start - clip.startOffSet, 0) * frameRate) / 1000
+      ),
   });
 };
 

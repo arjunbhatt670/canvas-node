@@ -160,10 +160,8 @@ export const loop = async (
     const data = await draw(frame);
 
     await new Promise<void>((resolve) => {
-      frameStream.on("data", async function handle() {
+      frameStream.once("data", async () => {
         time.streamed += timeTracker.now();
-
-        frameStream.off("data", handle);
 
         await makeDraw(++frame);
 
