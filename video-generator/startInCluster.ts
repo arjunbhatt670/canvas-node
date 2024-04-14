@@ -5,17 +5,17 @@ import { exec } from "child_process";
 
 import getConfig from "#root/utilities/getConfig";
 import saveTextClipAssets from "./saveTextClipAssets";
-import { TimeTracker } from "#root/utilities/grains";
+import { TimeTracker, print } from "#root/utilities/grains";
 import { videoSegmentsPath } from "#root/path";
 
 export default async function startInCluster() {
-  const totalCPUs = os.availableParallelism();
-  const totalTimeTracker = new TimeTracker();
-  totalTimeTracker.start();
-
   if (cluster.isPrimary) {
-    console.log(`Number of CPUs is ${totalCPUs}`);
-    console.log(`Master ${process.pid} is running`);
+    const totalCPUs = os.availableParallelism();
+    const totalTimeTracker = new TimeTracker();
+    totalTimeTracker.start();
+
+    print(`Number of CPUs is ${totalCPUs}`);
+    print(`Master ${process.pid} is running`);
 
     const { downloadedData: config } = await getConfig();
 
@@ -23,9 +23,37 @@ export default async function startInCluster() {
 
     const textClipsAssets = await saveTextClipAssets(config);
 
+    cluster.on("exit", (worker, code, signal) => {
+      print(
+        `worker ${worker.process.pid} died`,
+        `Code - ${code}`,
+        `Signal - ${signal}`
+      );
+    });
+
+    let doneCount = 0;
+    const time: any = [];
+    cluster.on("disconnect", () => {
+      doneCount++;
+      if (doneCount === totalCPUs) {
+        console.log("Total Time", time);
+        exec(`rm -rf ${textClipsAssets}`);
+      }
+    });
+
+    cluster.on("message", (worker, msg) => {
+      time.push({ [worker.id]: msg });
+    });
+
     if (Math.ceil(config.videoProperties.duration / 1000) < totalCPUs) {
-      await start(config);
+      await start(
+        config,
+        0,
+        config.videoProperties.duration,
+        `${videoSegmentsPath}/segment0.mp4`
+      );
       totalTimeTracker.log("Total Time");
+      exec(`rm -rf ${textClipsAssets}`);
       return;
     }
 
@@ -44,26 +72,8 @@ export default async function startInCluster() {
             : timePatch,
       });
     }
-
-    let disconnectedWorkersCount = 0;
-    cluster.on("exit", (worker, code, signal) => {
-      console.log(
-        `worker ${worker.process.pid} died`,
-        `Code - ${code}`,
-        `Signal - ${signal}`
-      );
-    });
-
-    cluster.on("disconnect", (worker) => {
-      disconnectedWorkersCount++;
-      if (disconnectedWorkersCount === totalCPUs) {
-        totalTimeTracker.log("Total Time");
-        exec(`rm -rf ${textClipsAssets}`);
-      }
-    });
   } else {
-    console.log(`Worker with id ${process.pid} started`);
-    console.log("start and duration", process.env.start, process.env.duration);
+    print(`Worker with id ${process.pid} started`);
 
     const timeTracker = new TimeTracker();
 
@@ -71,9 +81,11 @@ export default async function startInCluster() {
     await start(
       JSON.parse(process.env.mediaConfig!) as Media,
       Number(process.env.start),
-      Number(process.env.duration)
+      Number(process.env.duration),
+      `${videoSegmentsPath}/segment${Number(process.env.start)}.mp4`
     );
-    timeTracker.log(`Cluster Total time with start ${process.env.start}`);
+
+    cluster.worker?.send(timeTracker.now());
 
     cluster.worker?.disconnect();
   }

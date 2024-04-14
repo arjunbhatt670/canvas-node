@@ -13,9 +13,9 @@ export default function frame2VideoSpawn(
     const outputOptions = [
       "-vcodec libx264",
       "-b:v 1200k",
-      // '-maxrate', bitrate,
-      //   '-minrate', bitrate,
-      //   '-bufsize', '3M'
+      // "-maxrate 1200k",
+      // "-minrate 1200k",
+      // "-bufsize 3M",
       `-r ${frameRate}`,
     ];
 
@@ -37,6 +37,9 @@ export default function frame2VideoSpawn(
         reject(err);
       });
 
+    proc.stdin.on("error", (...args) => {
+      console.log("stdin err", args);
+    });
     inputStream.pipe(proc.stdin);
   });
 }

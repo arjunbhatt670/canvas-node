@@ -1,6 +1,6 @@
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs";
-import { exec, spawn } from "child_process";
+import { spawn } from "child_process";
 
 import { finalsPath, videoSegmentsPath } from "#root/path";
 import {
@@ -29,9 +29,10 @@ export default async function mergeVideos(
         if (code === 0) {
           timeTracker.log("Videos merged");
           resolve();
+        } else {
+          print("closed with code", code);
+          print(`Please refer ${errorFile}`);
         }
-        console.log("closed with code", code);
-        console.log(`Please refer ${errorFile}`);
       })
       .on("error", (err) => {
         print(err);

@@ -290,8 +290,10 @@ Array.prototype.myForEach = function (callback) {
   });
 };
 
-const print = (value) =>
-  process.stdout.write(`[${process.env.start || "master"}] ${value}\n`);
+const print = (...value) =>
+  process.stdout.write(
+    `[${process.env.start || "master"}] ${value.join(" ")}\n`
+  );
 
 const getMediaMetaData = (path: string) =>
   new Promise((res) => {
