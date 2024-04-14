@@ -168,12 +168,6 @@ function getStreams(media: string): Promise<ffmpeg.FfprobeStream[]> {
   );
 }
 
-function getFramePath({ frame, format, dir, frameName }: any) {
-  return [dir, `${frameName}_frame${frame ?? "%d"}.${format}`]
-    .filter(Boolean)
-    .join("/");
-}
-
 const Url = (url) => ({
   getExt: () => /[^.]+$/.exec(url)[0],
   getFile: () => url.split("/").pop(),
@@ -290,8 +284,10 @@ Array.prototype.myForEach = function (callback) {
   });
 };
 
-const print = (value) =>
-  process.stdout.write(`[${process.env.start || "master"}] ${value}\n`);
+const print = (...value) =>
+  process.stdout.write(
+    `[${process.env.start || "master"}] ${value.join(" ")}\n`
+  );
 
 const getMediaMetaData = (path: string) =>
   new Promise((res) => {
@@ -326,7 +322,6 @@ export {
   asyncIterable,
   hashString,
   downloadMedia,
-  getFramePath,
   Url,
   getStreams,
   print,

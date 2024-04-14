@@ -194,6 +194,10 @@ const getAudioFromTrack = async (
 };
 
 (async () => {
+  if (!process.env.OUTPUT) {
+    throw new ReferenceError("Please provide OUTPUT env variable");
+  }
+
   const { downloadedData: config } = await getConfig();
 
   const timeTracker = new TimeTracker();
@@ -212,7 +216,7 @@ const getAudioFromTrack = async (
 
   timeTracker.start();
 
-  await mixAudios(validTracks, process.env.OUTPUT!, "mp3");
+  await mixAudios(validTracks, process.env.OUTPUT, "mp3");
 
   timeTracker.log("Tracks are mixed");
 

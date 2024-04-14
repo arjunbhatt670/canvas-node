@@ -1,8 +1,9 @@
 import fs from "fs";
 
-import { rootPath, tmpDir } from "#root/path";
+import { rootPath } from "#root/path";
 import Puppeteer from "#root/puppeteer/index";
 import { TimeTracker } from "#root/utilities/grains";
+import { getTextAssetPath } from "./utils";
 
 export default async function saveTextClipAssets(config: Media) {
   const timeTracker = new TimeTracker();
@@ -30,7 +31,7 @@ export default async function saveTextClipAssets(config: Media) {
     timeTracker.log("Text clip dependencies loaded");
 
     timeTracker.start();
-    const paths = await Promise.all(
+    await Promise.all(
       textClips.map(async (clip) => {
         const dataUrl = await page.evaluate(
           function (htmlString, w, h) {
@@ -47,20 +48,16 @@ export default async function saveTextClipAssets(config: Media) {
           clip.coordinates.height
         );
 
-        const path = `${tmpDir}/${clip.id}.png`;
+        const path = getTextAssetPath(clip.id);
         fs.writeFileSync(
           path,
           Buffer.from(dataUrl.split("base64,")[1], "base64url")
         );
-
-        return path;
       })
     );
 
     timeTracker.log("Text snapshots extracted to file system");
 
     puppeteer.exit();
-
-    return paths;
   }
 }
