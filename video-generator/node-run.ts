@@ -4,6 +4,7 @@ import getConfig from "#root/utilities/getConfig";
 import { TimeTracker } from "#root/utilities/grains";
 import saveTextClipAssets from "./saveTextClipAssets";
 import start from "./start";
+import saveVideoClipFrames from "./saveVideoClipFrames";
 
 (async () => {
   const { downloadedData: config } = await getConfig();
@@ -14,10 +15,17 @@ import start from "./start";
   }
 
   totalTimeTracker.start();
-  await saveTextClipAssets(config);
+  const { clean: cleanTextAssets } = await saveTextClipAssets(config);
+  const { clean: cleanVideoFrames } = await saveVideoClipFrames(config, {
+    duration: config.videoProperties.duration,
+    start: 0,
+  });
 
   exec(`rm -rf ${process.env.OUTPUT}`);
 
   await start(config, 0, config.videoProperties.duration, process.env.OUTPUT);
   totalTimeTracker.log("Total Time");
+
+  cleanTextAssets();
+  cleanVideoFrames();
 })();

@@ -17,6 +17,7 @@ export default function frame2VideoSpawn(
       // "-minrate 1200k",
       // "-bufsize 3M",
       `-r ${frameRate}`,
+      `-preset ultrafast`,
     ];
 
     const proc = spawn(

@@ -7,6 +7,7 @@ import getConfig from "#root/utilities/getConfig";
 import saveTextClipAssets from "./saveTextClipAssets";
 import { TimeTracker, print } from "#root/utilities/grains";
 import { videoSegmentsPath } from "#root/path";
+import saveVideoClipFrames from "./saveVideoClipFrames";
 
 export default async function startInCluster() {
   if (cluster.isPrimary) {
@@ -21,7 +22,11 @@ export default async function startInCluster() {
 
     exec(`rm -rf ${videoSegmentsPath}/*`);
 
-    const textClipsAssets = await saveTextClipAssets(config);
+    const { clean: cleanTextAssets } = await saveTextClipAssets(config);
+    const { clean: cleanVideoFrames } = await saveVideoClipFrames(config, {
+      duration: config.videoProperties.duration,
+      start: 0,
+    });
 
     cluster.on("exit", (worker, code, signal) => {
       print(
@@ -37,7 +42,8 @@ export default async function startInCluster() {
       doneCount++;
       if (doneCount === totalCPUs) {
         console.log("Total Time", time);
-        exec(`rm -rf ${textClipsAssets}`);
+        cleanTextAssets();
+        cleanVideoFrames();
       }
     });
 
@@ -53,7 +59,8 @@ export default async function startInCluster() {
         `${videoSegmentsPath}/segment0.mp4`
       );
       totalTimeTracker.log("Total Time");
-      exec(`rm -rf ${textClipsAssets}`);
+      cleanTextAssets();
+      cleanVideoFrames();
       return;
     }
 

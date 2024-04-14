@@ -1,4 +1,5 @@
 import fs from "fs";
+import { exec } from "child_process";
 
 import { rootPath, tmpDir } from "#root/path";
 import Puppeteer from "#root/puppeteer/index";
@@ -10,6 +11,7 @@ export default async function saveTextClipAssets(config: Media) {
   const textClips = config.tracks
     .map((track) => track.clips.filter((clip) => clip.type === "TEXT_CLIP"))
     .flat(1);
+  const savedPaths: string[] = [];
 
   if (textClips.length) {
     timeTracker.start();
@@ -30,37 +32,45 @@ export default async function saveTextClipAssets(config: Media) {
     timeTracker.log("Text clip dependencies loaded");
 
     timeTracker.start();
-    const paths = await Promise.all(
-      textClips.map(async (clip) => {
-        const dataUrl = await page.evaluate(
-          function (htmlString, w, h) {
-            document.body.innerHTML = htmlString;
+    savedPaths.push(
+      ...(await Promise.all(
+        textClips.map(async (clip) => {
+          const dataUrl = await page.evaluate(
+            function (htmlString, w, h) {
+              document.body.innerHTML = htmlString;
 
-            return window.html2Image.toPng(document.body, {
-              width: w,
-              height: h,
-              quality: 1,
-            });
-          },
-          clip.htmlContent!,
-          clip.coordinates.width,
-          clip.coordinates.height
-        );
+              return window.html2Image.toPng(document.body, {
+                width: w,
+                height: h,
+                quality: 1,
+              });
+            },
+            clip.htmlContent!,
+            clip.coordinates.width,
+            clip.coordinates.height
+          );
 
-        const path = `${tmpDir}/${clip.id}.png`;
-        fs.writeFileSync(
-          path,
-          Buffer.from(dataUrl.split("base64,")[1], "base64url")
-        );
+          const path = `${tmpDir}/${clip.id}.png`;
+          fs.writeFileSync(
+            path,
+            Buffer.from(dataUrl.split("base64,")[1], "base64url")
+          );
 
-        return path;
-      })
+          return path;
+        })
+      ))
     );
 
     timeTracker.log("Text snapshots extracted to file system");
 
     puppeteer.exit();
-
-    return paths;
   }
+
+  return {
+    clean: () => {
+      savedPaths.forEach((path) => {
+        exec(`rm -rf ${path}`);
+      });
+    },
+  };
 }
