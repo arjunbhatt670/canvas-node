@@ -1,6 +1,5 @@
 import { Readable } from "stream";
 
-import { videoSegmentsPath } from "#root/path";
 import createFrames from "./createFrames";
 import { getMediaMetaData, print } from "#root/utilities/grains";
 import frame2VideoSpawn from "#root/utilities/frame2VideoSpawn";

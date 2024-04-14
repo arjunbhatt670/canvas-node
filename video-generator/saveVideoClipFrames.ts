@@ -1,9 +1,12 @@
-import { exec } from "child_process";
+import fs from "fs";
 
-import { tmpDir } from "#root/path";
-import { TimeTracker, getFramePath } from "#root/utilities/grains";
+import { TimeTracker, print } from "#root/utilities/grains";
 import { imgType } from "./config";
-import { extractVideoClipFrames } from "./utils";
+import {
+  extractVideoClipFrames,
+  getVideoClipsFramesFolderPath,
+  getVideoClipFramePath,
+} from "./utils";
 
 export default async function saveVideoClipFrames(
   config: Media,
@@ -15,33 +18,28 @@ export default async function saveVideoClipFrames(
     .map((track) => track.clips.filter((clip) => clip.type === "VIDEO_CLIP"))
     .flat(1);
 
+  const segmentFolder = getVideoClipsFramesFolderPath(limit.start);
+
+  if (!fs.existsSync(segmentFolder)) {
+    fs.mkdirSync(segmentFolder);
+  }
+
   timeTracker.start();
   await Promise.all(
     videoClips.map((clip) => {
-      const frameOutputPath = getFramePath({
-        dir: tmpDir,
+      const frameOutputPath = getVideoClipFramePath({
+        dir: segmentFolder,
         format: imgType,
-        frameName: clip.id,
+        clipName: clip.id,
       });
+
       return extractVideoClipFrames(clip, {
         frameOutputPath,
         frameRate: config.videoProperties.frameRate,
         limit,
       });
     })
-  );
+  ).catch((reason) => print(reason));
 
   timeTracker.log("Frames extracted from videos");
-
-  return {
-    clean: () => {
-      const videoFramesTempPath = getFramePath({
-        dir: tmpDir,
-        format: imgType,
-        frameName: "**",
-        frame: "**",
-      });
-      exec(`rm -rf ${videoFramesTempPath}`);
-    },
-  };
 }

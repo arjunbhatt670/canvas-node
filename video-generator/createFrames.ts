@@ -1,13 +1,19 @@
-import { exec } from "child_process";
 import fs from "fs";
 import { type Readable } from "stream";
 
-import { print, TimeTracker, getFramePath } from "#root/utilities/grains";
-import { tmpDir } from "#root/path";
+import { print, TimeTracker } from "#root/utilities/grains";
 
 import PIXI from "./pixi-node";
 import { loop } from "./frameLoop";
 import { imgType } from "./config.js";
+import saveVideoClipFrames from "./saveVideoClipFrames";
+import {
+  getShapeAssetPath,
+  getTextAssetPath,
+  getVideoClipsFramesFolderPath,
+  getVideoClipFrameEndPoints,
+  getVideoClipFramePath,
+} from "./utils";
 
 export default async function createFrames(
   config: Media,
@@ -18,11 +24,7 @@ export default async function createFrames(
   }
 ) {
   const timeTracker = new TimeTracker();
-
-  timeTracker.start();
-  timeTracker.log(`Created temporary directory ${tmpDir}`);
-
-  const tempPaths: string[] = [];
+  const assets: string[] = [];
 
   const videoClips = config.tracks
     .map((track) =>
@@ -35,6 +37,29 @@ export default async function createFrames(
     )
     .flat(1);
 
+  await saveVideoClipFrames(config, limit);
+
+  videoClips.map((clip) => {
+    const { count, startFrame } = getVideoClipFrameEndPoints(
+      clip,
+      limit,
+      config.videoProperties.frameRate
+    );
+
+    let frame = startFrame;
+    while (frame < startFrame + count) {
+      assets.push(
+        getVideoClipFramePath({
+          frame,
+          format: imgType,
+          dir: getVideoClipsFramesFolderPath(limit.start),
+          clipName: clip.id,
+        })
+      );
+      frame++;
+    }
+  });
+
   const shapeClips = config.tracks
     .map((track) =>
       track.clips.filter(
@@ -45,6 +70,21 @@ export default async function createFrames(
       )
     )
     .flat(1);
+  timeTracker.start();
+  shapeClips.map((clip) => {
+    const path = getShapeAssetPath(clip.id);
+    clip.shapeInfo &&
+      !fs.existsSync(path) &&
+      fs.writeFileSync(
+        path,
+        Buffer.from(
+          clip.shapeInfo.shapeMediaUrl.split("base64,")[1],
+          "base64url"
+        )
+      );
+    assets.push(path);
+  });
+  timeTracker.log("Shapes extracted to file system");
 
   const imageClips = config.tracks
     .map((track) =>
@@ -57,6 +97,10 @@ export default async function createFrames(
     )
     .flat(1);
 
+  imageClips.map((clip) => {
+    assets.push(clip.sourceUrl);
+  });
+
   const textClips = config.tracks
     .map((track) =>
       track.clips.filter(
@@ -67,6 +111,11 @@ export default async function createFrames(
       )
     )
     .flat(1);
+
+  textClips.map((clip) => {
+    const path = getTextAssetPath(clip.id);
+    assets.push(path);
+  });
 
   timeTracker.start();
   const app = new PIXI.Application({
@@ -87,65 +136,6 @@ export default async function createFrames(
     },
   });
 
-  const assets: string[] = [];
-
-  timeTracker.start();
-  shapeClips.map((clip) => {
-    const path = `${tmpDir}/${clip.id}.png`;
-    clip.shapeInfo &&
-      fs.writeFileSync(
-        path,
-        Buffer.from(
-          clip.shapeInfo.shapeMediaUrl.split("base64,")[1],
-          "base64url"
-        )
-      );
-    tempPaths.push(path);
-    assets.push(path);
-  });
-  timeTracker.log("Shapes extracted to file system");
-
-  imageClips.map((clip) => {
-    assets.push(clip.sourceUrl);
-  });
-
-  textClips.map((clip) => {
-    const path = `${tmpDir}/${clip.id}.png`;
-    assets.push(path);
-  });
-
-  videoClips.map((clip) => {
-    const start =
-      1 +
-      Math.round(
-        (Math.max(limit.start - clip.startOffSet, 0) *
-          config.videoProperties.frameRate) /
-          1000
-      );
-    const end = Math.ceil(
-      ((Math.min(
-        clip.startOffSet + clip.duration,
-        limit.start + limit.duration
-      ) -
-        Math.max(limit.start, clip.startOffSet)) *
-        config.videoProperties.frameRate) /
-        1000
-    );
-
-    let frame = start;
-    while (frame < start + end) {
-      assets.push(
-        getFramePath({
-          frame,
-          format: imgType,
-          dir: tmpDir,
-          frameName: clip.id,
-        })
-      );
-      frame++;
-    }
-  });
-
   timeTracker.start();
   await PIXI.Assets.load(assets);
   timeTracker.log("Assets loaded in pixi cache");
@@ -160,11 +150,6 @@ export default async function createFrames(
       time.draw
     } ms) (Extract - ${time.extract} ms) (Streamed - ${time.streamed} ms)`
   );
-
-  /** Remove temp files */
-  tempPaths.forEach((path) => {
-    exec(`rm -rf ${path}`);
-  });
 
   app.destroy(true, {
     children: true,

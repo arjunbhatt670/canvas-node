@@ -1,10 +1,15 @@
 import PIXI, { type Application } from "./pixi-node";
-import { getVisibleObjects } from "./utils";
-import { TimeTracker, Url, getFramePath, print } from "#root/utilities/grains";
+import {
+  getShapeAssetPath,
+  getTextAssetPath,
+  getVideoClipFolderPath,
+  getVideoClipFramePath,
+  getVisibleObjects,
+} from "./utils";
+import { TimeTracker, print } from "#root/utilities/grains";
 import { imgType } from "./config";
 
 import { type Readable } from "stream";
-import { tmpDir } from "#root/path";
 
 export const loop = async (
   config: Media,
@@ -51,11 +56,11 @@ export const loop = async (
       switch (clip.type) {
         case "VIDEO_CLIP": {
           try {
-            const videoFramePath = getFramePath({
+            const videoFramePath = getVideoClipFramePath({
               frame: currentFrame - clipStartFrame,
               format: imgType,
-              frameName: clip.id,
-              dir: tmpDir,
+              clipName: clip.id,
+              dir: getVideoClipFolderPath(clip.id, limit.start),
             });
 
             const img = await PIXI.Assets.get(videoFramePath);
@@ -78,7 +83,7 @@ export const loop = async (
           if (statics.has(clip)) {
             container.addChild(statics.get(clip));
           } else {
-            const img = await PIXI.Assets.get(`${tmpDir}/${clip.id}.png`);
+            const img = await PIXI.Assets.get(getShapeAssetPath(clip.id));
 
             const sprite = PIXI.Sprite.from(img);
             sprite.x = clip.coordinates.x;
@@ -116,7 +121,7 @@ export const loop = async (
           if (statics.has(clip)) {
             container.addChild(statics.get(clip));
           } else {
-            const img = await PIXI.Assets.get(`${tmpDir}/${clip.id}.png`);
+            const img = await PIXI.Assets.get(getTextAssetPath(clip.id));
             const sprite = PIXI.Sprite.from(img);
 
             sprite.x = clip.coordinates.x;
