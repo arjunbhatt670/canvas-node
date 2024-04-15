@@ -9,7 +9,7 @@ export default function frame2VideoSpawn(
   output: string
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    const inputOptions = [`-r ${frameRate}`];
+    const inputOptions = ["-y", `-r ${frameRate}`];
     const outputOptions = [
       "-vcodec libx264",
       "-b:v 1200k",

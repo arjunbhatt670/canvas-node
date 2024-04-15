@@ -1,14 +1,16 @@
 import express from "express";
 import http from "http";
-import { Readable } from "stream";
-import { performance } from "node:perf_hooks";
+import { exec } from "child_process";
 
-import { TimeTracker, getFramePath } from "../utilities/grains";
-import { tmpDir } from "../path";
-import { extractVideoClipFrames } from "../video-generator/utils";
+import { finalsPath, videoFramesPath } from "#root/path";
+import {
+  extractVideoClipFrames,
+  getVideoClipFramePath,
+} from "#root/video-generator/utils";
 import getConfig from "../utilities/getConfig";
-import frame2Video from "#root/utilities/frame2Video";
-import createFrames from "#root/video-generator/createFrames";
+
+import createVideoPuppeteer from "#root/puppeteer/frameCapture";
+import createVideo from "#root/video-generator/createVideo";
 
 const app = express();
 const port = 8000;
@@ -39,17 +41,33 @@ app.get("/video-frame", express.json(), async (req, res) => {
   const { videoId, frameNum } = req.query;
 
   res.sendFile(
-    getFramePath({
-      dir: tmpDir,
+    getVideoClipFramePath({
+      dir: videoFramesPath,
       format: "png",
-      frameName: videoId,
-      frame: frameNum,
+      clipName: videoId as string,
+      frame: Number(frameNum),
     })
   );
 });
 
 app.get("/extract-video-frames", express.json(), async (req, res) => {
-  const { downloadedData: config } = await getConfig();
+  const { downloadedData: config } = await getConfig("data-pup");
+
+  console.log(
+    getVideoClipFramePath({
+      dir: videoFramesPath,
+      format: "png",
+      clipName: "**",
+      frame: "**",
+    })
+  );
+
+  await new Promise<void>((resolve, reject) => {
+    exec(`rm -rf ${videoFramesPath}/*`, (err) => {
+      console.log(err);
+      err ? reject() : resolve();
+    });
+  });
 
   const videoClips = config.tracks
     .map((track) => track.clips.filter((clip) => clip.type === "VIDEO_CLIP"))
@@ -57,13 +75,21 @@ app.get("/extract-video-frames", express.json(), async (req, res) => {
     .filter(Boolean);
 
   await Promise.all(
-    videoClips.map((clip) =>
-      extractVideoClipFrames(clip, {
-        frameImageType: "png",
+    videoClips.map((clip) => {
+      const frameOutputPath = getVideoClipFramePath({
+        dir: videoFramesPath,
+        format: "png",
+        clipName: clip.id,
+      });
+      return extractVideoClipFrames(clip, {
+        frameOutputPath,
         frameRate: config.videoProperties.frameRate,
-        maxDuration: config.videoProperties.duration,
-      })
-    )
+        limit: {
+          start: 0,
+          duration: config.videoProperties.duration,
+        },
+      });
+    })
   );
 
   res.json({
@@ -71,29 +97,16 @@ app.get("/extract-video-frames", express.json(), async (req, res) => {
   });
 });
 
+app.get("/video-puppeteer", express.json(), async (req, res) => {
+  const path = `${finalsPath}/output_pup_server.mp4`;
+  await createVideoPuppeteer(path);
+  res.json({ ok: true });
+});
+
 app.get("/video", express.json(), async (req, res) => {
-  const { downloadedData: config } = await getConfig();
-  const totalTimeTracker = new TimeTracker();
-  const frameStream = new Readable({
-    read: () => {},
-  });
-
-  totalTimeTracker.start();
-
-  frame2Video(frameStream, config.videoProperties.frameRate).then(
-    (videoStream) => {
-      videoStream.on("close", () => {
-        totalTimeTracker.log("Total Time");
-      });
-      videoStream.pipe(res);
-    }
-  );
-
-  createFrames(config, frameStream);
-
-  res.setHeader("Accept-Ranges", "bytes");
-  //   res.setHeader("Content-Type", "video/mp4");
-  res.setHeader("Content-Disposition", 'filename="video.mp4"');
+  const path = `${finalsPath}/output_pixi_server.mp4`;
+  await createVideo(path);
+  res.json({ ok: true });
 });
 
 server.listen(port, () => {

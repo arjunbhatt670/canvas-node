@@ -10,6 +10,7 @@ export default class Puppeteer {
         "--enable-chrome-browser-cloud-management",
         "--disable-web-security",
       ],
+      debuggingPort: 9119,
     });
     const page = await this.browser.newPage();
     page.on("console", (message) => {

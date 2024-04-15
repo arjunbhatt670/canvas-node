@@ -1,6 +1,5 @@
 import os from "os";
 import cluster from "cluster";
-import { exec } from "child_process";
 
 import getConfig from "#root/utilities/getConfig";
 import saveTextClipAssets from "./saveTextClipAssets";
@@ -18,9 +17,7 @@ export default async function startInCluster() {
     print(`Number of CPUs is ${totalCPUs}`);
     print(`Master ${process.pid} is running`);
 
-    const { downloadedData: config } = await getConfig();
-
-    exec(`rm -rf ${videoSegmentsPath}/*`);
+    const { downloadedData: config } = await getConfig("shape_video");
 
     await saveTextClipAssets(config);
 

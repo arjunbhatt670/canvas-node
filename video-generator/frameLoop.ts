@@ -13,12 +13,10 @@ import { videoFramesPath } from "#root/path";
 
 const createSprite = (clip: DataClip, clipData: any) => {
   const sprite = PIXI.Sprite.from(clipData);
-  sprite.x = clip.coordinates.x;
-  sprite.y = clip.coordinates.y;
-  sprite.pivot.x = clip.coordinates.width / 2;
-  sprite.pivot.y = clip.coordinates.height / 2;
+  sprite.pivot.set(clip.coordinates.width / 2, clip.coordinates.height / 2);
   sprite.width = clip.coordinates.width;
   sprite.height = clip.coordinates.height;
+  sprite.position.set(clip.coordinates.x, clip.coordinates.y);
   sprite.angle = clip.rotationAngle;
   sprite.alpha = clip.opacity;
 

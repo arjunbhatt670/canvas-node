@@ -57,7 +57,7 @@ const getVideoClipFramePath = ({
   clipName,
   dir,
 }: {
-  frame?: number;
+  frame?: number | string;
   format: string;
   clipName: string;
   dir: string;

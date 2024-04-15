@@ -198,7 +198,7 @@ const getAudioFromTrack = async (
     throw new ReferenceError("Please provide OUTPUT env variable");
   }
 
-  const { downloadedData: config } = await getConfig();
+  const { downloadedData: config } = await getConfig("data60");
 
   const timeTracker = new TimeTracker();
   const totalTimeTracker = new TimeTracker();
