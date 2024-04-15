@@ -116,8 +116,6 @@ export default async function createFrames(
   });
   timeTracker.log("Pixi Application initialized");
 
-  app.renderer.background.color = "#ffffff";
-
   await PIXI.Assets.init({
     skipDetections: true,
     preferences: {

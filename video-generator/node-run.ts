@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 
 import getConfig from "#root/utilities/getConfig";
-import { TimeTracker } from "#root/utilities/grains";
+import { TimeTracker, getMediaMetaData } from "#root/utilities/grains";
 import saveTextClipAssets from "./saveTextClipAssets";
 import initiateAndStream from "./initiateAndStream";
 import { cleanAllAssets } from "./utils";
@@ -26,6 +26,8 @@ import { cleanAllAssets } from "./utils";
     process.env.OUTPUT
   );
   totalTimeTracker.log("Total Time");
+
+  getMediaMetaData(process.env.OUTPUT).then((meta) => console.log(meta));
 
   cleanAllAssets();
 })();

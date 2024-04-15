@@ -35,23 +35,26 @@ export default function video2Frame(
       //   "-f image2pipe",
     ];
 
-    ffmpegPath &&
-      spawn(
-        ffmpegPath,
-        [...inputOptions, `-i ${inputVideo}`, ...outputOptions, output],
-        {
-          shell: true,
+    const proc = spawn(
+      ffmpegPath!,
+      [...inputOptions, `-i ${inputVideo}`, ...outputOptions, output],
+      {
+        shell: true,
+      }
+    )
+      .on("close", (code) => {
+        if (code === 0) {
+          resolve(output);
+        } else {
+          reject(`Rejected with code ${code}`);
         }
-      )
-        .on("close", (code) => {
-          if (code === 0) {
-            resolve(output);
-          } else {
-            reject(`Rejected with code ${code}`);
-          }
-        })
-        .on("error", (err) => {
-          reject(err);
-        });
+      })
+      .on("error", (err) => {
+        reject(err);
+      });
+
+    process.stdin.on("error", (err) => {
+      reject(err);
+    });
   });
 }

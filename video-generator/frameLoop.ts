@@ -11,6 +11,20 @@ import { imgType } from "./config";
 import { type Readable } from "stream";
 import { videoFramesPath } from "#root/path";
 
+const createSprite = (clip: DataClip, clipData: any) => {
+  const sprite = PIXI.Sprite.from(clipData);
+  sprite.x = clip.coordinates.x;
+  sprite.y = clip.coordinates.y;
+  sprite.pivot.x = clip.coordinates.width / 2;
+  sprite.pivot.y = clip.coordinates.height / 2;
+  sprite.width = clip.coordinates.width;
+  sprite.height = clip.coordinates.height;
+  sprite.angle = clip.rotationAngle;
+  sprite.alpha = clip.opacity;
+
+  return sprite;
+};
+
 export const loop = async (
   config: Media,
   frameStream: Readable,
@@ -55,26 +69,17 @@ export const loop = async (
 
       switch (clip.type) {
         case "VIDEO_CLIP": {
-          try {
-            const videoFramePath = getVideoClipFramePath({
-              frame: currentFrame - clipStartFrame,
-              format: imgType,
-              clipName: clip.id,
-              dir: videoFramesPath,
-            });
+          const videoFramePath = getVideoClipFramePath({
+            frame: currentFrame - clipStartFrame,
+            format: imgType,
+            clipName: clip.id,
+            dir: videoFramesPath,
+          });
 
-            const img = await PIXI.Assets.get(videoFramePath);
+          const img = await PIXI.Assets.get(videoFramePath);
+          const sprite = createSprite(clip, img);
 
-            const sprite = PIXI.Sprite.from(img);
-            sprite.x = clip.coordinates.x;
-            sprite.y = clip.coordinates.y;
-            sprite.width = clip.coordinates.width;
-            sprite.height = clip.coordinates.height;
-
-            container.addChild(sprite);
-          } catch (_err) {
-            /**  */
-          }
+          container.addChild(sprite);
 
           break;
         }
@@ -85,13 +90,9 @@ export const loop = async (
           } else {
             const img = await PIXI.Assets.get(getShapeAssetPath(clip.id));
 
-            const sprite = PIXI.Sprite.from(img);
-            sprite.x = clip.coordinates.x;
-            sprite.y = clip.coordinates.y;
-            sprite.width = clip.coordinates.width;
-            sprite.height = clip.coordinates.height;
-
+            const sprite = createSprite(clip, img);
             statics.set(clip, sprite);
+
             container.addChild(sprite);
           }
 
@@ -104,13 +105,9 @@ export const loop = async (
           } else {
             const img = await PIXI.Assets.get(clip.sourceUrl);
 
-            const sprite = PIXI.Sprite.from(img);
-            sprite.x = clip.coordinates.x;
-            sprite.y = clip.coordinates.y;
-            sprite.width = clip.coordinates.width;
-            sprite.height = clip.coordinates.height;
-
+            const sprite = createSprite(clip, img);
             statics.set(clip, sprite);
+
             container.addChild(sprite);
           }
 
@@ -122,14 +119,10 @@ export const loop = async (
             container.addChild(statics.get(clip));
           } else {
             const img = await PIXI.Assets.get(getTextAssetPath(clip.id));
-            const sprite = PIXI.Sprite.from(img);
 
-            sprite.x = clip.coordinates.x;
-            sprite.y = clip.coordinates.y;
-            sprite.width = clip.coordinates.width;
-            sprite.height = clip.coordinates.height;
-
+            const sprite = createSprite(clip, img);
             statics.set(clip, sprite);
+
             container.addChild(sprite);
           }
 
