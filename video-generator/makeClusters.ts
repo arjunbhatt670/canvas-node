@@ -5,9 +5,10 @@ import { exec } from "child_process";
 import getConfig from "#root/utilities/getConfig";
 import saveTextClipAssets from "./saveTextClipAssets";
 import { TimeTracker, print } from "#root/utilities/grains";
-import { videoSegmentsPath } from "#root/path";
+import { finalsPath, videoSegmentsPath } from "#root/path";
 import { cleanAllAssets } from "./utils";
 import initiateAndStream from "./initiateAndStream";
+import mergeVideos from "./mergeVideos";
 
 export default async function makeClusters() {
   if (cluster.isPrimary) {
@@ -18,7 +19,7 @@ export default async function makeClusters() {
     print(`Number of CPUs is ${totalCPUs}`);
     print(`Master ${process.pid} is running`);
 
-    const { downloadedData: config } = await getConfig("data60");
+    const { downloadedData: config } = await getConfig("video");
 
     exec(`rm -rf ${videoSegmentsPath}/*`);
 
@@ -34,10 +35,12 @@ export default async function makeClusters() {
 
     let doneCount = 0;
     const time: any = [];
-    cluster.on("disconnect", () => {
+    cluster.on("disconnect", async () => {
       doneCount++;
       if (doneCount === totalCPUs) {
-        console.log("Total Time", time);
+        await mergeVideos(`${finalsPath}/merge.mp4`);
+        console.log("Segments Time", time);
+        totalTimeTracker.log("Total Time");
         cleanAllAssets();
       }
     });
@@ -54,6 +57,7 @@ export default async function makeClusters() {
         `${videoSegmentsPath}/segment0.mp4`
       );
       totalTimeTracker.log("Total Time");
+      mergeVideos(`${finalsPath}/merge.mp4`);
       cleanAllAssets();
       return;
     }

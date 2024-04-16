@@ -20,7 +20,7 @@
             "height": 720
           },
           "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdn/DAM/66000000/3dc50857-7b05-43dd-8825-3475e93e48b6-414175712/https___video.twimg.com_amplif.mp4",
-          "opacity": 0.2,
+          "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
           "dynamicVideoEnabled": false

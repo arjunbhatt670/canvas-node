@@ -11,7 +11,8 @@ export default function frame2VideoSpawn(
   return new Promise((resolve, reject) => {
     const inputOptions = ["-y", `-r ${frameRate}`];
     const outputOptions = [
-      "-vcodec libx264",
+      "-c:v h264_videotoolbox", // for mac
+      // "-vcodec libx264", // for all use
       "-b:v 1200k",
       // "-maxrate 1200k",
       // "-minrate 1200k",

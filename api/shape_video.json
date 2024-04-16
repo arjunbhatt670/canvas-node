@@ -34,7 +34,7 @@
           "id": "5dbf94ae-9f4d-492c-a732-cc35850e75bb",
           "type": "SHAPE_CLIP",
           "startOffSet": 0,
-          "duration": 14587,
+          "duration": 15000,
           "endOffSet": 14587,
           "coordinates": {
             "x": 114,
@@ -63,7 +63,7 @@
           "id": "a790b215-d818-4ff4-b736-0e88d3cae21b",
           "type": "SHAPE_CLIP",
           "startOffSet": 0,
-          "duration": 13702,
+          "duration": 15000,
           "endOffSet": 13702,
           "coordinates": {
             "x": 320,
@@ -93,7 +93,7 @@
           "id": "6a561815-57a8-44c3-991a-12342c7c4d3d",
           "type": "TEXT_CLIP",
           "startOffSet": 0,
-          "duration": 14871,
+          "duration": 15000,
           "endOffSet": 14871,
           "coordinates": {
             "x": 472,
@@ -118,7 +118,7 @@
           "id": "458e8f1e-0b4e-4ffb-91e7-794bd48c9e32",
           "type": "SHAPE_CLIP",
           "startOffSet": 0,
-          "duration": 7580,
+          "duration": 15000,
           "endOffSet": 7580,
           "coordinates": {
             "x": 29,
@@ -168,6 +168,31 @@
           },
           "dynamicFillColorEnabled": false,
           "dynamicBorderColorEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "c8ebe0d1-6284-4a78-b417-87284fd17114",
+      "clips": [
+        {
+          "id": "3fa174b2-e1be-42ef-9c2f-d6d58919f626",
+          "type": "TEXT_CLIP",
+          "startOffSet": 0,
+          "duration": 15000,
+          "endOffSet": 2000,
+          "coordinates": {
+            "x": 345,
+            "y": 273,
+            "width": 268,
+            "height": 293
+          },
+          "opacity": 1,
+          "rotationAngle": 0,
+          "htmlContent": "<div style=\"width: 268px; height: 293px; word-break: break-word; overflow: hidden; display: flex; align-items: flex-start;; font-size: 14px; background-color: #00000000;\" data-entityid=\"text-layer-container\"><div style=\"width: 100%\"><p style=\"margin-bottom: 0px; margin-top: 0px; font-family: Abril Fatface; line-height: 1.2\"><span style=\"font-family: Ubuntu; color: rgb(255, 255, 254); font-size: 36px; letter-spacing: 10px\">The text and color</span></p></div></div>",
+          "verticalAlignment": "TOP",
+          "placeholders": [],
+          "backgroundColor": "#00000000",
+          "dynamicBackgroundColorEnabled": false
         }
       ]
     }

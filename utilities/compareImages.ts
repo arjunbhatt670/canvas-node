@@ -33,10 +33,10 @@ export default async function compareImages(image1: string, image2: string) {
 // if (process.env.image1 && process.env.image2)
 //   compareImages(process.env.image1, process.env.image2);
 
-for (let i = 1; i <= 20; i++) {
+for (let i = 1; i <= 30; i++) {
   compareImages(
-    `${rootPath}/pixiFrames/frame${i}.png`,
-    `${rootPath}/puppeteerFrames/frame${i}.png`
+    `${rootPath}/puppeteerFrames/frame${i}.png`,
+    `${rootPath}/pixiFrames/frame${i}.png`
   );
 }
 

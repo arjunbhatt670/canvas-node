@@ -29,7 +29,9 @@ export default function video2Frame(
       `-vf fps=${frameRate}`,
       `-vf scale=${width ?? -1}:${height ?? -1}`,
       `-vframes ${frameCount}`,
-      "-q:v 1",
+      "-q:v 100",
+      // "-q:v 1", //jpeg
+      // "-qmin 1", //jpeg
       `-start_number ${frameCountStart ?? 1}`,
       //   "-c:v png",
       //   "-f image2pipe",
