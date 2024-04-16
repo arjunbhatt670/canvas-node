@@ -10,17 +10,21 @@ import {
   writeFileIntoText,
 } from "#root/utilities/grains";
 
-export default async function mergeVideos(
-  videosTextFilePath: string,
-  output: string
-) {
+async function mergeVideosFfmpeg(videosTextFilePath: string, output: string) {
   const timeTracker = new TimeTracker();
   const errorFile = `${finalsPath}/merge-errors.txt`;
 
   return new Promise<void>((resolve, reject) => {
     const proc = spawn(
       ffmpegPath!,
-      ["-f concat", "-safe 0", `-i ${videosTextFilePath}`, "-c copy", output],
+      [
+        "-y",
+        "-f concat",
+        "-safe 0",
+        `-i ${videosTextFilePath}`,
+        "-c copy",
+        output,
+      ],
       {
         shell: true,
       }
@@ -45,20 +49,15 @@ export default async function mergeVideos(
   });
 }
 
-(async () => {
+const mergeVideos = async (finalVideoPath: string) => {
   const listFilePath = `${finalsPath}/video_segments.txt`;
-  const finalVideoPath =
-    process.env.OUTPUT ?? `${finalsPath}/output_pixi_final1.mp4`;
+  writeFileIntoText(videoSegmentsPath, listFilePath);
 
-  if (fs.existsSync(finalVideoPath)) {
-    fs.rmSync(finalVideoPath);
-  }
-
-  writeFileIntoText(videoSegmentsPath, "mp4", listFilePath);
-
-  await mergeVideos(listFilePath, finalVideoPath);
+  await mergeVideosFfmpeg(listFilePath, finalVideoPath);
 
   const meta = await getMediaMetaData(finalVideoPath);
 
   console.log(meta);
-})();
+};
+
+export default mergeVideos;

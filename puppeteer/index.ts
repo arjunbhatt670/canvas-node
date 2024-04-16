@@ -11,6 +11,7 @@ export default class Puppeteer {
         "--disable-web-security",
       ],
       debuggingPort: 9119,
+      devtools: false,
     });
     const page = await this.browser.newPage();
     page.on("console", (message) => {

@@ -296,12 +296,8 @@ const getMediaMetaData = (path: string) =>
     });
   });
 
-const writeFileIntoText = (
-  fromDir: string,
-  fileType: "mp4" | "mov" | "mkv",
-  textFilePath: string
-) => {
-  const files = execSync(`ls ${fromDir}/*.${fileType} | sort -V`)
+const writeFileIntoText = (fromDir: string, textFilePath: string) => {
+  const files = execSync(`ls ${fromDir}/* | sort -V`)
     .toString()
     .trim()
     .split("\n");

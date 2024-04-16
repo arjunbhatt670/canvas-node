@@ -18,6 +18,7 @@ export default function frame2VideoSpawn(
       // "-bufsize 3M",
       `-r ${frameRate}`,
       `-preset ultrafast`,
+      "-pix_fmt yuv420p",
     ];
 
     const proc = spawn(

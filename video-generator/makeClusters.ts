@@ -1,5 +1,6 @@
 import os from "os";
 import cluster from "cluster";
+import { exec } from "child_process";
 
 import getConfig from "#root/utilities/getConfig";
 import saveTextClipAssets from "./saveTextClipAssets";
@@ -8,7 +9,7 @@ import { videoSegmentsPath } from "#root/path";
 import { cleanAllAssets } from "./utils";
 import initiateAndStream from "./initiateAndStream";
 
-export default async function startInCluster() {
+export default async function makeClusters() {
   if (cluster.isPrimary) {
     const totalCPUs = os.cpus().length;
     const totalTimeTracker = new TimeTracker();
@@ -17,7 +18,9 @@ export default async function startInCluster() {
     print(`Number of CPUs is ${totalCPUs}`);
     print(`Master ${process.pid} is running`);
 
-    const { downloadedData: config } = await getConfig("shape_video");
+    const { downloadedData: config } = await getConfig("data60");
+
+    exec(`rm -rf ${videoSegmentsPath}/*`);
 
     await saveTextClipAssets(config);
 
@@ -89,5 +92,3 @@ export default async function startInCluster() {
     cluster.worker?.disconnect();
   }
 }
-
-startInCluster();

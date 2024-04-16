@@ -140,7 +140,7 @@
     }
   ],
   "videoProperties": {
-    "duration": 10000,
+    "duration": 60000,
     "frameRate": 30,
     "height": 360,
     "width": 640

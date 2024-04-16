@@ -5,7 +5,7 @@ import initiateAndStream from "./initiateAndStream";
 import { cleanAllAssets } from "./utils";
 
 const createVideo = async (finalVideoPath: string) => {
-  const { downloadedData: config } = await getConfig("shape_video");
+  const { downloadedData: config } = await getConfig("data60");
   const totalTimeTracker = new TimeTracker();
 
   totalTimeTracker.start();
