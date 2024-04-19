@@ -1,6 +1,11 @@
 import { exec } from "child_process";
 
-import { shapeAssetsPath, textAssetsPath, videoFramesPath } from "#root/path";
+import {
+  shapeAssetsPath,
+  textAssetsPath,
+  tmpDir,
+  videoFramesPath,
+} from "#root/path";
 import video2Frame from "#root/utilities/video2Frame";
 
 const extractVideoClipFrames = async (
@@ -92,6 +97,7 @@ const cleanAllAssets = () => {
   exec(`rm -rf ${videoFramesPath}/*`);
   exec(`rm -rf ${textAssetsPath}/*`);
   exec(`rm -rf ${shapeAssetsPath}/*`);
+  exec(`rm -rf ${tmpDir}/pixiFrames/*`);
 };
 
 export {

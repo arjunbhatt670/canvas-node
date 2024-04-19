@@ -19,11 +19,16 @@ export default async function makeClusters() {
     print(`Number of CPUs is ${totalCPUs}`);
     print(`Master ${process.pid} is running`);
 
-    const { downloadedData: config } = await getConfig("video");
+    const { downloadedData: config } = await getConfig("data60");
 
     exec(`rm -rf ${videoSegmentsPath}/*`);
 
     await saveTextClipAssets(config);
+
+    process.on("exit", (code) => {
+      print("process exited with code", code);
+      cleanAllAssets();
+    });
 
     cluster.on("exit", (worker, code, signal) => {
       print(
@@ -41,7 +46,6 @@ export default async function makeClusters() {
         await mergeVideos(`${finalsPath}/merge.mp4`);
         console.log("Segments Time", time);
         totalTimeTracker.log("Total Time");
-        cleanAllAssets();
       }
     });
 
@@ -58,7 +62,6 @@ export default async function makeClusters() {
       );
       totalTimeTracker.log("Total Time");
       mergeVideos(`${finalsPath}/merge.mp4`);
-      cleanAllAssets();
       return;
     }
 

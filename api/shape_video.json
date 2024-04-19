@@ -63,7 +63,7 @@
           "id": "a790b215-d818-4ff4-b736-0e88d3cae21b",
           "type": "SHAPE_CLIP",
           "startOffSet": 0,
-          "duration": 15000,
+          "duration": 4000,
           "endOffSet": 13702,
           "coordinates": {
             "x": 320,

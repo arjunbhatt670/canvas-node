@@ -33,7 +33,7 @@ export default async function compareImages(image1: string, image2: string) {
 // if (process.env.image1 && process.env.image2)
 //   compareImages(process.env.image1, process.env.image2);
 
-for (let i = 1; i <= 30; i++) {
+for (let i = 1; i <= 3; i++) {
   compareImages(
     `${rootPath}/puppeteerFrames/frame${i}.png`,
     `${rootPath}/pixiFrames/frame${i}.png`
@@ -50,3 +50,5 @@ for (let i = 1; i <= 30; i++) {
 
 // ffmpeg -i finals/merge.mp4 -r 30 pixiFrames/frame%0d.png
 // image1=pixiFrames/frame2.png image2=puppeteerFrames/frame2.png ts-node utilities/compareImages.ts
+
+// rm -rf pixiFrames/* && rm -rf puppeteerFrames/*

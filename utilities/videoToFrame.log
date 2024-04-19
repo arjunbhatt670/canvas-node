@@ -1,0 +1,43 @@
+ffmpeg version 6.1.1 Copyright (c) 2000-2023 the FFmpeg developers
+  built with Apple clang version 15.0.0 (clang-1500.1.0.2.5)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/6.1.1_3 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libopenvino --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      58. 29.100 / 58. 29.100
+  libavcodec     60. 31.102 / 60. 31.102
+  libavformat    60. 16.100 / 60. 16.100
+  libavdevice    60.  3.100 / 60.  3.100
+  libavfilter     9. 12.100 /  9. 12.100
+  libswscale      7.  5.100 /  7.  5.100
+  libswresample   4. 12.100 /  4. 12.100
+  libpostproc    57.  3.100 / 57.  3.100
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from '/Users/arjun.bhatt/Downloads/sandbox/assets/7da548cd-4fe8-4d16-9aaa-5bbeff84e7bc.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : Lavf58.45.100
+  Duration: 00:00:08.63, start: 0.000000, bitrate: 199 kb/s
+  Stream #0:0[0x1](und): Video: h264 (Main) (avc1 / 0x31637661), yuv420p(progressive), 640x360, 462 kb/s, 30 fps, 30 tbr, 15360 tbn (default)
+    Metadata:
+      handler_name    : L-SMASH Video Handler
+      vendor_id       : [0][0][0][0]
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 1 kb/s (default)
+    Metadata:
+      handler_name    : L-SMASH Audio Handler
+      vendor_id       : [0][0][0][0]
+Multiple -filter, -af or -vf options specified for stream 0, only the last option '-filter:v scale=180:180' will be used.
+Stream mapping:
+  Stream #0:0 -> #0:0 (h264 (native) -> png (native))
+Press [q] to stop, [?] for help
+OOutput #0, image2, to '/Users/arjun.bhatt/DownloaOutput #0, image2, to '/Users/arjun.bhatt/Downloads/sandbox/intermediates/videoFrames/2ca83020-3d13-46eb-bba9-fac4a2b0767d_frame%d.png':
+  Metadata:
+    major_brand     : Output #0, image2, to '/Users/arjun.bhatt/Downloads/sandbox/intermediates/videoFrames/20338a9f-430a-42f3-b319-bb65997f984a_frame%d.png':
+  Metadata:
+    major_brand     : mp42
+    minor_version   : 0
+    compatible_brands: isommp42
+    encoder         : Lavf60.16.100
+  Stream #0:0(und): Video: png, rgb24(pc, gbr/bt709/bt709, progressive), 180x101 [SAR 404:405 DAR 16:9], q=2-31, 200 kb/s, 30 fps, 30 [out#0/image2 @ 0x15c412050] video:4614kB audio:0kB subtitle:0kB other streams:0kframe=  171 fps=0.0 q=-0.0 size=N/A time=00:00:05.70 bitrate=N/A speed=11.2x    frame=  367 fps=363 q=-0.0 size=N/A time=00:00:12.46 bitrate=N/A speed=12.3x    frame=  671 fps=444 q=-0.0 size=N/A time=00:00:22.60 bitrate=N/A speed=  15x    frame=  978 fps=486 q=-0.0 size=N/A time=00:00:32.83 bitrate=N/A speed=16.3x    frame= 1293 fps=514 q=-0.0 size=N/A time=00:00:43.33 bitrate=N/A speed=17.2x    frame= 1521 fps=505 q=-0.0 size=N/A time=00:00:50.93 bitrate=N/A speed=16.9x    [out#0/image2 @ 0x125b059b0] video:82542kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
+frame= 1800 fps=525 q=-0.0 Lsize=N/A time=00:00:59.96 bitrate=N/A speed=17.5x    
+ated
+frame= 1317 fps=521 q=-0.0 size=N/A time=00:00:44.13 bitrate=N/A dup=1064 drop=0 speed=17.5x    frame= 1547 fps=510 q=-0.0 size=N/A time=00:00:51.80 bitrate=N/A dup=1248 drop=0 speed=17.1x    [out#0/image2 @ 0x149b0ef20] video:5691kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
+frame= 1800 fps=526 q=-0.0 Lsize=N/A time=00:00:59.96 bitrate=N/A dup=1440 drop=0 speed=17.5x    

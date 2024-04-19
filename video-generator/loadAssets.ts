@@ -1,23 +1,12 @@
 import fs from "fs";
-import { type Readable } from "stream";
 
-import { print, TimeTracker } from "#root/utilities/grains";
+import { TimeTracker } from "#root/utilities/grains";
 
 import PIXI from "./pixi-node";
-import { loop } from "./frameLoop";
-import { imgType } from "./config.js";
-import saveVideoClipFrames from "./saveVideoClipFrames";
-import {
-  getShapeAssetPath,
-  getTextAssetPath,
-  getVideoClipFrameEndPoints,
-  getVideoClipFramePath,
-} from "./utils";
-import { videoFramesPath } from "#root/path";
+import { getShapeAssetPath, getTextAssetPath } from "./utils";
 
-export default async function createFrames(
+export default async function loadAssets(
   config: Media,
-  frameStream: Readable,
   limit: {
     start: number;
     duration: number;
@@ -26,28 +15,26 @@ export default async function createFrames(
   const timeTracker = new TimeTracker();
   const assets: string[] = [];
 
-  const videoClips = await saveVideoClipFrames(config, limit);
+  // videoClips.map((clip) => {
+  //   const { count, startFrame } = getVideoClipFrameEndPoints(
+  //     clip,
+  //     limit,
+  //     config.videoProperties.frameRate
+  //   );
 
-  videoClips.map((clip) => {
-    const { count, startFrame } = getVideoClipFrameEndPoints(
-      clip,
-      limit,
-      config.videoProperties.frameRate
-    );
-
-    let frame = startFrame;
-    while (frame < startFrame + count) {
-      assets.push(
-        getVideoClipFramePath({
-          frame,
-          format: imgType,
-          dir: videoFramesPath,
-          clipName: clip.id,
-        })
-      );
-      frame++;
-    }
-  });
+  //   let frame = startFrame;
+  //   while (frame < startFrame + count) {
+  //     //assets.push(
+  //     // getVideoClipFramePath({
+  //     //   frame,
+  //     //   format: imgType,
+  //     //   dir: videoFramesPath,
+  //     //   clipName: clip.id,
+  //     // })
+  //     // );
+  //     frame++;
+  //   }
+  // });
 
   const shapeClips = config.tracks
     .map((track) =>
@@ -107,42 +94,28 @@ export default async function createFrames(
   });
 
   timeTracker.start();
-  const app = new PIXI.Application({
-    width: config.videoProperties.width,
-    height: config.videoProperties.height,
-    hello: true,
-    antialias: true,
-    clearBeforeRender: true,
-  });
+  // const app = new PIXI.Application({
+  //   width: config.videoProperties.width,
+  //   height: config.videoProperties.height,
+  //   hello: true,
+  //   antialias: true,
+  //   clearBeforeRender: true,
+  // });
   timeTracker.log("Pixi Application initialized");
 
   await PIXI.Assets.init({
     skipDetections: true,
-    preferences: {
-      preferCreateImageBitmap: true,
-    },
   });
 
   timeTracker.start();
   await PIXI.Assets.load(assets);
   timeTracker.log("Assets loaded in pixi cache");
 
-  const loopTimeTracker = new TimeTracker();
-
-  loopTimeTracker.start();
-  const time = await loop(config, frameStream, app, limit);
-
-  print(
-    `Frames iteration took ${loopTimeTracker.now()} ms. (Drawing - ${
-      time.draw
-    } ms) (Extract - ${time.extract} ms) (Streamed - ${time.streamed} ms)`
-  );
-
-  app.destroy(true, {
-    children: true,
-    baseTexture: true,
-    texture: true,
-  });
-  await PIXI.Assets.unload(assets);
-  PIXI.Assets.reset();
+  // app.destroy(true, {
+  //   children: true,
+  //   baseTexture: true,
+  //   texture: true,
+  // });
+  // await PIXI.Assets.unload(assets);
+  // PIXI.Assets.reset();
 }

@@ -1,0 +1,28 @@
+ffmpeg version 6.1.1 Copyright (c) 2000-2023 the FFmpeg developers
+  built with Apple clang version 15.0.0 (clang-1500.1.0.2.5)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/6.1.1_3 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libopenvino --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      58. 29.100 / 58. 29.100
+  libavcodec     60. 31.102 / 60. 31.102
+  libavformat    60. 16.100 / 60. 16.100
+  libavdevice    60.  3.100 / 60.  3.100
+  libavfilter     9. 12.100 /  9. 12.100
+  libswscale      7.  5.100 /  7.  5.100
+  libswresample   4. 12.100 /  4. 12.100
+  libpostproc    57.  3.100 / 57.  3.100
+Input #0, jpeg_pipe, from 'fd:':
+  Duration: N/A, bitrate: N/A
+  Stream #0:0: Video: mjpeg (Baseline), yuvj420p(pc, bt470bg/unknown/unknown), 640x360 [SAR 1:1 DAR 16:9], 25 fps, 25 tbr, 25 tbn
+[out#0/mp4 @ 0x131915270] Codec AVOption preset (Encoding preset) has not been used for any stream. The most likely reason is either wrong type (e.g. a video option with no video streams) or that it is a private option of some encoder which was not actually used for any stream.
+Stream mapping:
+  Stream #0:0 -> #0:0 (mjpeg (native) -> h264 (h264_videotoolbox))
+[swscaler @ 0x140040000] deprecated pixel format used, make sure you did set range correctly
+[swscaler @ 0x148030000] deprecated pixel format used, make sure you did set range correctly
+[swscaler @ 0x140040000] deprecated pixel format used, make sure you did set range correctly
+[swscaler @ 0x118110000] deprecated pixel format used, make sure you did set range correctly
+Output #0, mp4, to 'finals/output_pixi4k.mp4':
+  Metadata:
+    encoder         : Lavf60.16.100
+  Stream #0:0: Video: h264 (avc1 / 0x31637661), yuv420p(tv, bt470bg/unknown/unknown, progressive), 640x360 [SAR 1:1 DAR 16:9], q=2-31, 1200 kb/s, 30 fps, 15360 tbn
+    Metadata:
+      encoder         : Lavc60.31.102 h264_videotoolbox
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    frame=  148 fps=0.0 q=-0.0 size=     256kB time=00:00:04.93 bitrate= 425.2kbits/s speed=9.86x    frame=  432 fps=431 q=-0.0 size=    1024kB time=00:00:14.40 bitrate= 582.6kbits/s speed=14.4x    frame=  733 fps=488 q=-0.0 size=    1536kB time=00:00:24.43 bitrate= 515.0kbits/s speed=16.3x    frame=  989 fps=493 q=-0.0 size=    2048kB time=00:00:32.96 bitrate= 508.9kbits/s speed=16.4x    frame= 1293 fps=516 q=-0.0 size=    2560kB time=00:00:43.10 bitrate= 486.6kbits/s speed=17.2x    frame= 1546 fps=514 q=-0.0 size=    3072kB time=00:00:51.53 bitrate= 488.3kbits/s speed=17.1x    

@@ -16,7 +16,9 @@ const createVideoPuppeteer = async (finalVideoPath: string) => {
   const timeTracker = new TimeTracker();
   const totalTimeTracker = new TimeTracker();
 
-  const { data: rawConfig, downloadedData: config } = await getConfig("data60");
+  const { data: rawConfig, downloadedData: config } = await getConfig(
+    "data-pup"
+  );
 
   totalTimeTracker.start();
 
