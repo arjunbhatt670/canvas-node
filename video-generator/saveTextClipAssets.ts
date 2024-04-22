@@ -16,11 +16,13 @@ export default async function saveTextClipAssets(config: Media) {
     timeTracker.start();
     const puppeteer = new Puppeteer();
     const page = await puppeteer.init();
+    if (global.stats) global.stats.puppeteerInit = timeTracker.now();
     timeTracker.log("\n\nPuppeteer loaded");
 
     timeTracker.start();
+
     await page.addStyleTag({
-      url: `http://localhost:5173/roboto.css`,
+      url: `http://localhost:8000/roboto.css`,
     });
     await page.addStyleTag({
       path: `${rootPath}/utilities/reset.css`,
@@ -28,9 +30,7 @@ export default async function saveTextClipAssets(config: Media) {
     await page.addScriptTag({
       path: `${rootPath}/utilities/html2Image.js`,
     });
-    timeTracker.log("Text clip dependencies loaded");
 
-    timeTracker.start();
     await Promise.all(
       textClips.map(async (clip) => {
         const dataUrl = await page.evaluate(
@@ -56,6 +56,7 @@ export default async function saveTextClipAssets(config: Media) {
       })
     );
 
+    if (global.stats) global.stats.text = timeTracker.now();
     timeTracker.log("Text snapshots extracted to file system");
 
     puppeteer.exit();

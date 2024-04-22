@@ -2,7 +2,7 @@ import express from "express";
 import http from "http";
 import { exec } from "child_process";
 
-import { finalsPath, videoFramesPath } from "#root/path";
+import { finalsPath, rootPath, videoFramesPath } from "#root/path";
 import {
   extractVideoClipFrames,
   getVideoClipFramePath,
@@ -15,6 +15,8 @@ import createVideo from "#root/video-generator/createVideo";
 const app = express();
 const port = 8000;
 const server = new http.Server(app);
+
+app.use(express.static("public"));
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -48,6 +50,11 @@ app.get("/video-frame", express.json(), async (req, res) => {
       frame: Number(frameNum),
     })
   );
+});
+
+app.get("/config", (req, res) => {
+  const { fileName } = req.query;
+  res.sendFile(`${rootPath}/api/${fileName}.json`);
 });
 
 app.get("/extract-video-frames", express.json(), async (req, res) => {
