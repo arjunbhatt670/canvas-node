@@ -49,7 +49,7 @@ const handleRow = async (row: Row) => {
 };
 
 (async () => {
-  const rows = createStatsMeta([120000], [30], [[640, 360]]);
+  const rows = createStatsMeta([60000], [30], [[640, 360]]);
 
   const q: queueAsPromised<Row, void> = fastq.promise(
     (row) => handleRow(row),

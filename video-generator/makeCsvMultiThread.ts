@@ -51,7 +51,7 @@ const handleRow = async (row: Row) => {
 
 (async () => {
   const rows = createStatsMeta(
-    [120000],
+    [9000],
     [30],
     [
       //   [426, 240],

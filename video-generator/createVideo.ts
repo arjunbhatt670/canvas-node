@@ -2,6 +2,7 @@ import { TimeTracker, getMediaMetaData } from "#root/utilities/grains";
 import saveTextClipAssets from "./saveTextClipAssets";
 import initiateAndStream from "./initiateAndStream";
 import { cleanAllAssets } from "./utils";
+import saveVideoClipFrames from "./saveVideoClipFrames";
 
 const createVideo = async (finalVideoPath: string, config: Media) => {
   const totalTimeTracker = new TimeTracker();
@@ -9,6 +10,10 @@ const createVideo = async (finalVideoPath: string, config: Media) => {
     totalTimeTracker.start();
 
     await saveTextClipAssets(config);
+    await saveVideoClipFrames(config, {
+      duration: config.videoProperties.duration,
+      start: 0,
+    });
 
     await initiateAndStream(
       config,

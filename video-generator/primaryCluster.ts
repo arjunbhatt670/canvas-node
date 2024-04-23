@@ -13,6 +13,7 @@ import { finalsPath, videoSegmentsPath } from "#root/path";
 import mergeVideos from "./mergeVideos";
 import createVideo from "./createVideo";
 import { cleanAllAssets } from "./utils";
+import saveVideoClipFrames from "./saveVideoClipFrames";
 
 export default async function primaryCluster(
   config: Media,
@@ -35,6 +36,10 @@ export default async function primaryCluster(
     exec(`rm -rf ${videoSegmentsPath}/*`);
 
     await saveTextClipAssets(config);
+    await saveVideoClipFrames(config, {
+      duration: config.videoProperties.duration,
+      start: 0,
+    });
 
     cluster.on("exit", (worker, code, signal) => {
       print(

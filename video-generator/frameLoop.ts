@@ -1,4 +1,4 @@
-import PIXI, { type Sprite } from "./pixi-node";
+import PIXI, { type Sprite, type Texture } from "./pixi-node";
 import { type Readable } from "stream";
 
 import {
@@ -11,10 +11,14 @@ import {
 import { TimeTracker, print } from "#root/utilities/grains";
 import { videoFramesPath } from "#root/path";
 import { imgType } from "./config";
-import loadAssets from "./loadAssets";
 
-const createSprite = (clip: DataClip, clipData: any) => {
-  const sprite = PIXI.Sprite.from(clipData);
+const createSprite = async (clip: DataClip, src: string) => {
+  const imgTexture = await PIXI.loadNodeTexture.load?.<Texture>(src, {})!;
+
+  imgTexture.orig.width = clip.coordinates.width;
+  imgTexture.orig.height = clip.coordinates.height;
+
+  const sprite = PIXI.Sprite.from(imgTexture);
   sprite.pivot.set(clip.coordinates.width / 2, clip.coordinates.height / 2);
   sprite.width = clip.coordinates.width;
   sprite.height = clip.coordinates.height;
@@ -33,8 +37,6 @@ export const loop = async (
     duration: number;
   }
 ) => {
-  const { reset } = await loadAssets(config, limit);
-
   const totalFrames =
     (limit.duration * config.videoProperties.frameRate) / 1000;
   const startFrame =
@@ -56,8 +58,6 @@ export const loop = async (
   });
   if (global.stats) global.stats.pixiInit = timeTracker.now();
   timeTracker.log("Renderer detected");
-
-  const videoClipAssets: string[] = [];
 
   async function draw(currentFrame: number) {
     timeTracker.start();
@@ -87,13 +87,9 @@ export const loop = async (
             dir: videoFramesPath,
           });
 
-          const img = await PIXI.Assets.load(videoFramePath);
-
-          const sprite = createSprite(clip, img);
+          const sprite = await createSprite(clip, videoFramePath);
 
           container.addChild(sprite);
-
-          videoClipAssets.push(videoFramePath);
 
           break;
         }
@@ -102,9 +98,8 @@ export const loop = async (
           if (statics.has(clip.id)) {
             container.addChild(statics.get(clip.id)!);
           } else {
-            const img = PIXI.Assets.get(getShapeAssetPath(clip.id));
+            const sprite = await createSprite(clip, getShapeAssetPath(clip.id));
 
-            const sprite = createSprite(clip, img);
             statics.set(clip.id, sprite);
 
             container.addChild(sprite);
@@ -117,9 +112,7 @@ export const loop = async (
           if (statics.has(clip.id)) {
             container.addChild(statics.get(clip.id)!);
           } else {
-            const img = PIXI.Assets.get(getImageAssetPath(clip.id));
-
-            const sprite = createSprite(clip, img);
+            const sprite = await createSprite(clip, clip.sourceUrl!);
             statics.set(clip.id, sprite);
 
             container.addChild(sprite);
@@ -132,9 +125,7 @@ export const loop = async (
           if (statics.has(clip.id)) {
             container.addChild(statics.get(clip.id)!);
           } else {
-            const img = PIXI.Assets.get(getTextAssetPath(clip.id));
-
-            const sprite = createSprite(clip, img);
+            const sprite = await createSprite(clip, getTextAssetPath(clip.id));
             statics.set(clip.id, sprite);
 
             container.addChild(sprite);
@@ -185,20 +176,23 @@ export const loop = async (
 
   const loopTimeTracker = new TimeTracker();
   loopTimeTracker.start();
-  await makeDraw(startFrame);
 
-  if (global.stats) global.stats.drawCanvas = time.draw;
-  if (global.stats) global.stats.extractCanvas = time.extract;
-  if (global.stats) global.stats.streamed = time.streamed;
+  try {
+    await makeDraw(startFrame);
 
-  print(`Processed ${totalFrames} frames.`);
-  print(
-    `Frames iteration took ${loopTimeTracker.now()} ms. (Drawing - ${
-      time.draw
-    } ms) (Extract - ${time.extract} ms) (Streamed - ${time.streamed} ms)`
-  );
+    if (global.stats) global.stats.drawCanvas = time.draw;
+    if (global.stats) global.stats.extractCanvas = time.extract;
+    if (global.stats) global.stats.streamed = time.streamed;
 
-  frameStream.push(null);
+    print(`Processed ${totalFrames} frames.`);
+    print(
+      `Frames iteration took ${loopTimeTracker.now()} ms. (Drawing - ${
+        time.draw
+      } ms) (Extract - ${time.extract} ms) (Streamed - ${time.streamed} ms)`
+    );
 
-  await reset(videoClipAssets);
+    frameStream.push(null);
+  } finally {
+    renderer.destroy(true);
+  }
 };
