@@ -1,12 +1,14 @@
 import { exec } from "child_process";
 
 import {
+  imageAssetsPath,
   shapeAssetsPath,
   textAssetsPath,
   tmpDir,
   videoFramesPath,
 } from "#root/path";
 import video2Frame from "#root/utilities/video2Frame";
+import { imgType } from "./config";
 
 const extractVideoClipFrames = async (
   clip: DataClip,
@@ -27,7 +29,7 @@ const extractVideoClipFrames = async (
     frameRate
   );
 
-  return video2Frame(clip.sourceUrl, frameOutputPath, {
+  return video2Frame(clip.sourceUrl!, frameOutputPath, {
     startTime:
       ((clip.trimOffset || 0) + Math.max(limit.start - clip.startOffSet, 0)) /
       1000,
@@ -53,8 +55,9 @@ function getVisibleObjects(config: Media, timeInstance: number): DataClip[] {
     );
 }
 
-const getShapeAssetPath = (id: string) => `${shapeAssetsPath}/${id}.png`;
-const getTextAssetPath = (id: string) => `${textAssetsPath}/${id}.png`;
+const getShapeAssetPath = (id: string) => `${shapeAssetsPath}/${id}.${imgType}`;
+const getTextAssetPath = (id: string) => `${textAssetsPath}/${id}.${imgType}`;
+const getImageAssetPath = (id: string) => `${imageAssetsPath}/${id}.${imgType}`;
 
 const getVideoClipFramePath = ({
   frame,
@@ -93,12 +96,13 @@ const getVideoClipFrameEndPoints = (
   };
 };
 
-const cleanAllAssets = () => {
-  exec(`rm -rf ${videoFramesPath}/*`);
-  exec(`rm -rf ${textAssetsPath}/*`);
-  exec(`rm -rf ${shapeAssetsPath}/*`);
-  exec(`rm -rf ${tmpDir}/pixiFrames/*`);
-};
+const cleanAllAssets = () =>
+  new Promise((resolve) =>
+    exec(
+      `find ${videoFramesPath}/ ${textAssetsPath}/ ${shapeAssetsPath}/ ${imageAssetsPath}/ -name "*.${imgType}" -delete`,
+      resolve
+    )
+  );
 
 export {
   extractVideoClipFrames,
@@ -108,4 +112,5 @@ export {
   getVideoClipFramePath,
   cleanAllAssets,
   getVideoClipFrameEndPoints,
+  getImageAssetPath,
 };

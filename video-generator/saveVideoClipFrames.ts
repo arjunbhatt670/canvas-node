@@ -39,6 +39,7 @@ export default async function saveVideoClipFrames(
     })
   ).catch((reason) => print(reason));
 
+  if (global.stats) global.stats.processVideo = timeTracker.now();
   timeTracker.log("Frames extracted from videos");
 
   return videoClips;

@@ -1,3 +1,3 @@
 module.exports = {
-    imgType: 'png'
+    imgType: 'jpeg'
 }

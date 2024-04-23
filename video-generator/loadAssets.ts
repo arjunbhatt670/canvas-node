@@ -3,7 +3,12 @@ import fs from "fs";
 import { TimeTracker } from "#root/utilities/grains";
 
 import PIXI from "./pixi-node";
-import { getShapeAssetPath, getTextAssetPath } from "./utils";
+import {
+  getImageAssetPath,
+  getShapeAssetPath,
+  getTextAssetPath,
+} from "./utils";
+import imageResize from "#root/utilities/imageResize";
 
 export default async function loadAssets(
   config: Media,
@@ -15,27 +20,6 @@ export default async function loadAssets(
   const timeTracker = new TimeTracker();
   const assets: string[] = [];
 
-  // videoClips.map((clip) => {
-  //   const { count, startFrame } = getVideoClipFrameEndPoints(
-  //     clip,
-  //     limit,
-  //     config.videoProperties.frameRate
-  //   );
-
-  //   let frame = startFrame;
-  //   while (frame < startFrame + count) {
-  //     //assets.push(
-  //     // getVideoClipFramePath({
-  //     //   frame,
-  //     //   format: imgType,
-  //     //   dir: videoFramesPath,
-  //     //   clipName: clip.id,
-  //     // })
-  //     // );
-  //     frame++;
-  //   }
-  // });
-
   const shapeClips = config.tracks
     .map((track) =>
       track.clips.filter(
@@ -46,21 +30,28 @@ export default async function loadAssets(
       )
     )
     .flat(1);
+
   timeTracker.start();
-  shapeClips.map((clip) => {
-    const path = getShapeAssetPath(clip.id);
-    clip.shapeInfo &&
-      !fs.existsSync(path) &&
-      fs.writeFileSync(
-        path,
-        Buffer.from(
+  await Promise.all(
+    shapeClips.map(async (clip) => {
+      const path = getShapeAssetPath(clip.id);
+
+      if (clip.shapeInfo && !fs.existsSync(path)) {
+        const buffer = Buffer.from(
           clip.shapeInfo.shapeMediaUrl.split("base64,")[1],
           "base64url"
-        )
-      );
-    assets.push(path);
-  });
-  timeTracker.log("Shapes extracted to file system");
+        );
+        await imageResize(buffer, path, {
+          height: clip.coordinates.height,
+          width: clip.coordinates.width,
+        });
+      }
+
+      assets.push(path);
+    })
+  );
+  if (global.stats) global.stats.processShape = timeTracker.now();
+  timeTracker.log("Shape clips extracted");
 
   const imageClips = config.tracks
     .map((track) =>
@@ -73,9 +64,23 @@ export default async function loadAssets(
     )
     .flat(1);
 
-  imageClips.map((clip) => {
-    assets.push(clip.sourceUrl);
-  });
+  timeTracker.start();
+  await Promise.all(
+    imageClips.map(async (clip) => {
+      const path = getImageAssetPath(clip.id);
+
+      if (!fs.existsSync(path)) {
+        await imageResize(clip.sourceUrl!, path, {
+          height: clip.coordinates.height,
+          width: clip.coordinates.width,
+        });
+      }
+
+      assets.push(path);
+    })
+  );
+  if (global.stats) global.stats.processImage = timeTracker.now();
+  timeTracker.log("Image clips extracted");
 
   const textClips = config.tracks
     .map((track) =>
@@ -94,28 +99,24 @@ export default async function loadAssets(
   });
 
   timeTracker.start();
-  // const app = new PIXI.Application({
-  //   width: config.videoProperties.width,
-  //   height: config.videoProperties.height,
-  //   hello: true,
-  //   antialias: true,
-  //   clearBeforeRender: true,
-  // });
-  timeTracker.log("Pixi Application initialized");
 
   await PIXI.Assets.init({
     skipDetections: true,
   });
 
-  timeTracker.start();
   await PIXI.Assets.load(assets);
+
+  if (global.stats) global.stats.createCache = timeTracker.now();
   timeTracker.log("Assets loaded in pixi cache");
 
-  // app.destroy(true, {
-  //   children: true,
-  //   baseTexture: true,
-  //   texture: true,
-  // });
-  // await PIXI.Assets.unload(assets);
-  // PIXI.Assets.reset();
+  return {
+    reset: async (unloadData: string[]) => {
+      timeTracker.start();
+      await PIXI.Assets.unload(assets);
+      await PIXI.Assets.unload(unloadData);
+      PIXI.Assets.reset();
+      if (global.stats) global.stats.removeCache = timeTracker.now();
+      timeTracker.log("Assets unloaded from pixi cache");
+    },
+  };
 }

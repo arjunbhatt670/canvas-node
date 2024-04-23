@@ -11,7 +11,6 @@ import {
 } from "#root/utilities/grains";
 
 async function mergeVideosFfmpeg(videosTextFilePath: string, output: string) {
-  const timeTracker = new TimeTracker();
   const errorFile = `${finalsPath}/merge-errors.txt`;
 
   return new Promise<void>((resolve, reject) => {
@@ -31,7 +30,6 @@ async function mergeVideosFfmpeg(videosTextFilePath: string, output: string) {
     )
       .on("close", (code, s) => {
         if (code === 0) {
-          timeTracker.log("Videos merged");
           resolve();
         } else {
           print("closed with code", code);
@@ -39,25 +37,24 @@ async function mergeVideosFfmpeg(videosTextFilePath: string, output: string) {
         }
       })
       .on("error", (err) => {
-        print(err);
         reject(err);
-      })
-      .on("spawn", () => {
-        timeTracker.start();
       });
     proc.stderr.pipe(fs.createWriteStream(errorFile));
   });
 }
 
 const mergeVideos = async (finalVideoPath: string) => {
+  const timeTracker = new TimeTracker();
+
+  timeTracker.start();
+
   const listFilePath = `${finalsPath}/video_segments.txt`;
   writeFileIntoText(videoSegmentsPath, listFilePath);
 
   await mergeVideosFfmpeg(listFilePath, finalVideoPath);
 
-  const meta = await getMediaMetaData(finalVideoPath);
-
-  console.log(meta);
+  if (global.stats) global.stats.mergeVideos = timeTracker.now();
+  timeTracker.log("Videos merged");
 };
 
 export default mergeVideos;

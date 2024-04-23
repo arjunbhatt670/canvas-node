@@ -56,7 +56,7 @@ export default async function saveTextClipAssets(config: Media) {
       })
     );
 
-    if (global.stats) global.stats.text = timeTracker.now();
+    if (global.stats) global.stats.processText = timeTracker.now();
     timeTracker.log("Text snapshots extracted to file system");
 
     puppeteer.exit();

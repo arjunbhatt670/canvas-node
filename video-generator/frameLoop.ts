@@ -1,20 +1,17 @@
 import PIXI, { type Sprite } from "./pixi-node";
-import fs from "fs";
+import { type Readable } from "stream";
+
 import {
+  getImageAssetPath,
   getShapeAssetPath,
   getTextAssetPath,
   getVideoClipFramePath,
   getVisibleObjects,
 } from "./utils";
-import { TimeTracker } from "#root/utilities/grains";
-import { imgType } from "./config";
-
+import { TimeTracker, print } from "#root/utilities/grains";
 import { videoFramesPath } from "#root/path";
-
-import * as fastq from "fastq";
-import type { queueAsPromised } from "fastq";
-
-type Task = number;
+import { imgType } from "./config";
+import loadAssets from "./loadAssets";
 
 const createSprite = (clip: DataClip, clipData: any) => {
   const sprite = PIXI.Sprite.from(clipData);
@@ -28,13 +25,16 @@ const createSprite = (clip: DataClip, clipData: any) => {
   return sprite;
 };
 
-export const loop = (
+export const loop = async (
   config: Media,
+  frameStream: Readable,
   limit: {
     start: number;
     duration: number;
   }
 ) => {
+  const { reset } = await loadAssets(config, limit);
+
   const totalFrames =
     (limit.duration * config.videoProperties.frameRate) / 1000;
   const startFrame =
@@ -47,29 +47,19 @@ export const loop = (
     extract: 0,
     streamed: 0,
   };
+  timeTracker.start();
   const renderer = PIXI.autoDetectRenderer({
     width: config.videoProperties.width,
     height: config.videoProperties.height,
     antialias: true,
     preserveDrawingBuffer: true,
-    // clearBeforeRender: true,
   });
+  if (global.stats) global.stats.pixiInit = timeTracker.now();
+  timeTracker.log("Renderer detected");
 
-  const q: queueAsPromised<Task> = fastq.promise(asyncWorker, 10);
-
-  async function asyncWorker(frame: Task): Promise<Buffer> {
-    const baseData = await draw(frame);
-
-    // fs.writeFileSync(`${rootPath}/pixiFrames/frame_${currentFrame}.jpeg`, baseData.split(';base64,').pop(), {
-    //     encoding: 'base64'
-    // })
-    const buffer = Buffer.from(baseData, "base64");
-
-    return buffer;
-  }
+  const videoClipAssets: string[] = [];
 
   async function draw(currentFrame: number) {
-    console.log(currentFrame);
     timeTracker.start();
     const currentTime =
       ((currentFrame - 1) * 1000) / config.videoProperties.frameRate;
@@ -98,9 +88,12 @@ export const loop = (
           });
 
           const img = await PIXI.Assets.load(videoFramePath);
+
           const sprite = createSprite(clip, img);
 
           container.addChild(sprite);
+
+          videoClipAssets.push(videoFramePath);
 
           break;
         }
@@ -121,11 +114,16 @@ export const loop = (
         }
 
         case "IMAGE_CLIP": {
-          const img = PIXI.Assets.get(clip.sourceUrl);
+          if (statics.has(clip.id)) {
+            container.addChild(statics.get(clip.id)!);
+          } else {
+            const img = PIXI.Assets.get(getImageAssetPath(clip.id));
 
-          const sprite = createSprite(clip, img);
+            const sprite = createSprite(clip, img);
+            statics.set(clip.id, sprite);
 
-          container.addChild(sprite);
+            container.addChild(sprite);
+          }
 
           break;
         }
@@ -154,27 +152,53 @@ export const loop = (
     timeTracker.start();
     const baseData = renderer.view
       .toDataURL?.("image/jpeg", 1)
-      ?.split(";base64,")[1]!; // 5ms
-
+      ?.split(";base64,")[1]!;
+    const bufferData = Buffer.from(baseData, "base64");
     renderer.clear();
-
     time.extract += timeTracker.now();
 
-    return baseData;
+    // fs.writeFileSync(`${rootPath}/pixiFrames/frame_${currentFrame}.jpeg`, baseData.split(';base64,').pop(), {
+    //     encoding: 'base64'
+    // })
+
+    return bufferData;
   }
 
-  const promises = [];
+  async function makeDraw(frame: number) {
+    if (frame > endFrame) return;
 
-  let frame = endFrame;
-  while (frame >= startFrame) {
-    promises.push(q.push(frame));
-    frame--;
+    const data = await draw(frame);
+
+    await new Promise<void>((resolve) => {
+      frameStream.once("data", async () => {
+        time.streamed += timeTracker.now();
+
+        await makeDraw(++frame);
+
+        resolve();
+      });
+
+      timeTracker.start();
+      frameStream.push(data);
+    });
   }
 
-  // print(`Processed ${totalFrames} frames.`);
-  // frameStream.push(null);
+  const loopTimeTracker = new TimeTracker();
+  loopTimeTracker.start();
+  await makeDraw(startFrame);
 
-  // renderer.destroy(true);
+  if (global.stats) global.stats.drawCanvas = time.draw;
+  if (global.stats) global.stats.extractCanvas = time.extract;
+  if (global.stats) global.stats.streamed = time.streamed;
 
-  return promises;
+  print(`Processed ${totalFrames} frames.`);
+  print(
+    `Frames iteration took ${loopTimeTracker.now()} ms. (Drawing - ${
+      time.draw
+    } ms) (Extract - ${time.extract} ms) (Streamed - ${time.streamed} ms)`
+  );
+
+  frameStream.push(null);
+
+  await reset(videoClipAssets);
 };

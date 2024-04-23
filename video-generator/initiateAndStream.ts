@@ -1,10 +1,7 @@
 import { Readable } from "stream";
-import fs from "fs";
-import { TimeTracker, getMediaMetaData, print } from "#root/utilities/grains";
 import frame2VideoSpawn from "#root/utilities/frame2VideoSpawn";
 import { loop } from "./frameLoop";
 import saveVideoClipFrames from "./saveVideoClipFrames";
-import loadAssets from "./loadAssets";
 
 export default async function initiateAndStream(
   config: Media,
@@ -17,27 +14,18 @@ export default async function initiateAndStream(
     start,
   };
 
-  await saveVideoClipFrames(config, limit);
-  await loadAssets(config, limit);
-
-  const promises = loop(config, limit);
-
   const frameStream = new Readable({
-    read: async function () {
-      // console.log("reading");
-      const buffer = (await promises.pop()) as Buffer;
-      // console.log("read");
-      if (buffer) {
-        this.push(buffer);
-      } else {
-        this.push(null);
-      }
-    },
+    read: () => {},
   });
 
-  await frame2VideoSpawn(
-    frameStream,
-    config.videoProperties.frameRate,
-    outputVideoPath
-  );
+  await saveVideoClipFrames(config, limit);
+
+  await Promise.all([
+    frame2VideoSpawn(
+      frameStream,
+      config.videoProperties.frameRate,
+      outputVideoPath
+    ),
+    loop(config, frameStream, limit),
+  ]);
 }

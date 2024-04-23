@@ -1,43 +1,49 @@
-ffmpeg version 6.1.1 Copyright (c) 2000-2023 the FFmpeg developers
-  built with Apple clang version 15.0.0 (clang-1500.1.0.2.5)
-  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/6.1.1_3 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libopenvino --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
-  libavutil      58. 29.100 / 58. 29.100
-  libavcodec     60. 31.102 / 60. 31.102
-  libavformat    60. 16.100 / 60. 16.100
-  libavdevice    60.  3.100 / 60.  3.100
-  libavfilter     9. 12.100 /  9. 12.100
-  libswscale      7.  5.100 /  7.  5.100
-  libswresample   4. 12.100 /  4. 12.100
-  libpostproc    57.  3.100 / 57.  3.100
-Input #0, mov,mp4,m4a,3gp,3g2,mj2, from '/Users/arjun.bhatt/Downloads/sandbox/assets/7da548cd-4fe8-4d16-9aaa-5bbeff84e7bc.mp4':
+ffmpeg version 7.0 Copyright (c) 2000-2024 the FFmpeg developers
+  built with Apple clang version 15.0.0 (clang-1500.3.9.4)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.0 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libopenvino --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      59.  8.100 / 59.  8.100
+  libavcodec     61.  3.100 / 61.  3.100
+  libavformat    61.  1.100 / 61.  1.100
+  libavdevice    61.  1.100 / 61.  1.100
+  libavfilter    10.  1.100 / 10.  1.100
+  libswscale      8.  1.100 /  8.  1.100
+  libswresample   5.  1.100 /  5.  1.100
+  libpostproc    58.  1.100 / 58.  1.100
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from '/Users/arjun.bhatt/Downloads/sandbox/assets/ab106b4794e-f9b3-4560-961e-a9950cf14376.mp4':
   Metadata:
     major_brand     : isom
     minor_version   : 512
     compatible_brands: isomiso2avc1mp41
-    encoder         : Lavf58.45.100
-  Duration: 00:00:08.63, start: 0.000000, bitrate: 199 kb/s
-  Stream #0:0[0x1](und): Video: h264 (Main) (avc1 / 0x31637661), yuv420p(progressive), 640x360, 462 kb/s, 30 fps, 30 tbr, 15360 tbn (default)
-    Metadata:
-      handler_name    : L-SMASH Video Handler
-      vendor_id       : [0][0][0][0]
-  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 1 kb/s (default)
-    Metadata:
-      handler_name    : L-SMASH Audio Handler
-      vendor_id       : [0][0][0][0]
-Multiple -filter, -af or -vf options specified for stream 0, only the last option '-filter:v scale=180:180' will be used.
+    encoder         : Lavf61.1.100
+  Duration: 00:02:17.07, start: 0.000000, bitrate: 2367 kb/s
+  Stream #0:0[0x1](eng): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 1920x1080 [SAR 1:1 DAR 16:9], 2364 kb/s, 29.97 fps, 29.97 tbr, 30k tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc61.3.100 libx264
+Multiple -filter/-af/-vf options specified for stream 0, only the last option '-filter:v scale=256:144' will be used.
 Stream mapping:
-  Stream #0:0 -> #0:0 (h264 (native) -> png (native))
+  Stream #0:0 -> #0:0 (h264 (native) -> mjpeg (native))
 Press [q] to stop, [?] for help
-OOutput #0, image2, to '/Users/arjun.bhatt/DownloaOutput #0, image2, to '/Users/arjun.bhatt/Downloads/sandbox/intermediates/videoFrames/2ca83020-3d13-46eb-bba9-fac4a2b0767d_frame%d.png':
+[swscaler @ 0x131510000] deprecated [swscaler @ 0x1404d0000] deprecated pixel format used, maOutput #0, image2, to '/Users/arjun.Output #0, image2, to '/Users/arjun.bhatt/Downloads/sandbox/intermediates/videoFrames/ab206b4794e-f9b3-4560-961e-a9950cf14376_frame%d.jpeg':
   Metadata:
-    major_brand     : Output #0, image2, to '/Users/arjun.bhatt/Downloads/sandbox/intermediates/videoFrames/20338a9f-430a-42f3-b319-bb65997f984a_frame%d.png':
-  Metadata:
-    major_brand     : mp42
+    major_brand     : dash
     minor_version   : 0
-    compatible_brands: isommp42
-    encoder         : Lavf60.16.100
-  Stream #0:0(und): Video: png, rgb24(pc, gbr/bt709/bt709, progressive), 180x101 [SAR 404:405 DAR 16:9], q=2-31, 200 kb/s, 30 fps, 30 [out#0/image2 @ 0x15c412050] video:4614kB audio:0kB subtitle:0kB other streams:0kframe=  171 fps=0.0 q=-0.0 size=N/A time=00:00:05.70 bitrate=N/A speed=11.2x    frame=  367 fps=363 q=-0.0 size=N/A time=00:00:12.46 bitrate=N/A speed=12.3x    frame=  671 fps=444 q=-0.0 size=N/A time=00:00:22.60 bitrate=N/A speed=  15x    frame=  978 fps=486 q=-0.0 size=N/A time=00:00:32.83 bitrate=N/A speed=16.3x    frame= 1293 fps=514 q=-0.0 size=N/A time=00:00:43.33 bitrate=N/A speed=17.2x    frame= 1521 fps=505 q=-0.0 size=N/A time=00:00:50.93 bitrate=N/A speed=16.9x    [out#0/image2 @ 0x125b059b0] video:82542kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
-frame= 1800 fps=525 q=-0.0 Lsize=N/A time=00:00:59.96 bitrate=N/A speed=17.5x    
-ated
-frame= 1317 fps=521 q=-0.0 size=N/A time=00:00:44.13 bitrate=N/A dup=1064 drop=0 speed=17.5x    frame= 1547 fps=510 q=-0.0 size=N/A time=00:00:51.80 bitrate=N/A dup=1248 drop=0 speed=17.1x    [out#0/image2 @ 0x149b0ef20] video:5691kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
-frame= 1800 fps=526 q=-0.0 Lsize=N/A time=00:00:59.96 bitrate=N/A dup=1440 drop=0 speed=17.5x    
+    compatible_brands: iso6avc1mp41
+    encoder         : Lavf61.1.100
+  Stream #0:0(und): Video: mjpeg, yuvj420p(pc, unknown/bt709/bt709, progressive), 256x144 [SAR 1:1 DAR 16:9], q=2-31, 200 kb/s, 30 fps, 30 tbn (default)
+      Metadata:
+        creation_time   : 2024-02-24T00:28:51.000000Z
+        handler_name    : ISO Media file produced by Google Inc.
+        vendor_id       : [0][0][0][0]
+        encoder         : Lframe=  259 fps=0.0 q=1.0 size=N/A time=00:00:08.86 bitrate=N/A speed=17.7x    frame=  529 fps=524 q=1.0 size=N/A time=00:00:17.86 bitrate=N/A dup=1 drop=0 speed=17.7x    frame=  790 fps=522 q=1.0 size=N/A time=00:00:26.60 bitrate=N/A dup=1 drop=0 speed=17.6x    frame= 1060 fps=526 q=1.0 size=N/A time=00:00:35.60 bitrate=N/A dup=1 drop=0 speed=17.7x    frame= 1324 fps=526 q=1.0 size=N/A time=00:00:44.40 bitrate=N/A dup=1 drop=0 speed=17.6x    frame= 1629 fps=539 q=1.0 size=N/A time=00:00:54.40 bitrate=N/A dup=2 drop=0 speed=  18x    frame= 1854 fps=526 q=1.0 size=N/A time=00:01:02.06 bitrate=N/A dup=2 drop=0 speed=17.6x    frame= 2090 fps=519 q=1.0 size=N/A time=00:01:09.93 bitrate=N/A dup=2 drop=0 speed=17.4x    frame= 2317 fps=511 q=1.0 size=N/A time=00:01:17.50 bitrate=N/A dup=2 drop=0 speed=17.1x    frame= 2526 fps=501 q=1.0 size=N/A time=00:01:24.46 bitrate=N/A dup=3 drop=0 speed=16.8x    frame= 2769 fps=500 q=1.0 size=N/A time=00:01:32.56 bitrate=N/A dup=3 drop=0 speed=16.7x    frame= 2978 fps=493 q=1.0 size=N/A time=00:01:39.53 bitrate=N/A dup=3 drop=0 speed=16.5x    frame= 3257 fps=497 q=1.0 size=N/A time=00:01:48.76 bitrate=N/A dup=3 drop=0 speed=16.6x    [out#0/image2 @ 0x12a811090] video:48512KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame= 3600 fps=516 q=1.0 Lsize=N/A time=00:02:00.00 bitrate=N/A dup=4 drop=0 speed=17.2x    
+bench: utime=18.493s stime=1.324s rtime=6.975s
+bench: maxrss=175292416KiB
+=1.0 Lsize=N/A time=00:02:00.00 bitrate=N/A dup=600 drop=0 speed=17.7x    
+bench: utime=16.738s stime=1.210s rtime=6.773s
+bench: maxrss=177094656KiB
+.2x    [out#0/image2 @ 0x14eb057b0] video:16175KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame= 3600 fps=571 q=1.0 Lsize=N/A time=00:02:00.00 bitrate=N/A dup=2880 drop=0 speed=  19x    
+bench: utime=1.322s stime=0.822s rtime=6.305s
+bench: maxrss=68255744KiB

@@ -7,4 +7,7 @@ export const finalsPath = resolve("./finals");
 export const videoSegmentsPath = resolve("./finals/segments");
 export const textAssetsPath = resolve("./intermediates/textAssets");
 export const shapeAssetsPath = resolve("./intermediates/shapeAssets");
+export const imageAssetsPath = resolve("./intermediates/imageAssets");
 export const videoFramesPath = resolve("./intermediates/videoFrames");
+export const ffmpegPath = "/opt/homebrew/Cellar/ffmpeg/7.0/bin/ffmpeg";
+export const nodePath = "/opt/homebrew/Cellar/node/21.6.2/bin/node";

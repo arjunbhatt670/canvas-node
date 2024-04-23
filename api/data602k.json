@@ -4,16 +4,16 @@
       "id": "4419f227-d609-4b9d-a1e2-11a613222923",
       "clips": [
         {
-          "id": "ab96b4794e-f9b3-4560-961e-a9950cf14376",
+          "id": "3f5a7380-de1a-48bc-aee9-bcebb79bb7f0",
           "type": "IMAGE_CLIP",
           "startOffSet": 0,
           "duration": 60000,
           "endOffSet": 10000,
           "coordinates": {
-            "x": 213,
-            "y": 120,
-            "width": 426,
-            "height": 240
+            "x": 960,
+            "y": 540,
+            "width": 1920,
+            "height": 1080
           },
           "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/3919db80-af1d-4e76-9710-c58bd7f439bf-1976802398/https___qa6-media-proxy.sprink.jpg",
           "opacity": 1,
@@ -24,19 +24,42 @@
       ]
     },
     {
+      "id": "f3ed8eaa-8434-49ad-9fdd-32a8317b5fd5",
+      "clips": [
+        {
+          "id": "7da548cd-4fe8-4d16-9aaa-5bbeff84e7bc",
+          "type": "VIDEO_CLIP",
+          "startOffSet": 2000,
+          "duration": 2000,
+          "endOffSet": 4000,
+          "coordinates": {
+            "x": 815,
+            "y": 290,
+            "width": 540,
+            "height": 540
+          },
+          "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/4c330a5a-4fe8-43f4-895d-193062f577f2-802226955/Automation_DND.mp4",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
       "id": "8643db80-a889-4d55-bb61-831a1151956a",
       "clips": [
         {
-          "id": "ab86b4794e-f9b3-4560-961e-a9950cf14376",
+          "id": "1eac54b6-c919-4f19-ac52-7515dc0f9289",
           "type": "VIDEO_CLIP",
           "startOffSet": 0,
-          "duration": 60000,
+          "duration": 2000,
           "endOffSet": 2000,
           "coordinates": {
-            "x": 83.25,
-            "y": 60,
-            "width": 106.5,
-            "height": 60
+            "x": 291,
+            "y": 288,
+            "width": 540,
+            "height": 540
           },
           "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/c176e7c3-3d23-4001-9057-52c592619958-1989095257/Should_be_visible_only_under_r.mp4",
           "opacity": 1,
@@ -50,18 +73,41 @@
       "id": "44f3a965-19a2-4e4a-9d18-284424de4ec6",
       "clips": [
         {
-          "id": "ab76b4794e-f9b3-4560-961e-a9950cf14376",
+          "id": "2ca83020-3d13-46eb-bba9-fac4a2b0767d",
           "type": "VIDEO_CLIP",
           "startOffSet": 0,
           "duration": 60000,
           "endOffSet": 4000,
           "coordinates": {
-            "x": 342.75,
-            "y": 180,
-            "width": 106.5,
-            "height": 60
+            "x": 296,
+            "y": 780,
+            "width": 540,
+            "height": 540
           },
           "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdata/DAM/66000000/cfe5846a-0fa6-481b-9cc5-d4b9037ced9e-2043898115/Enel_Green_Power_Azure_Sky_Win.mp4",
+          "opacity": 1,
+          "rotationAngle": 0,
+          "crop": "FILL",
+          "dynamicVideoEnabled": false
+        }
+      ]
+    },
+    {
+      "id": "q3ed8eaa-8434-49ad-9fdd-32a8317b5fd5",
+      "clips": [
+        {
+          "id": "llda548cd-4fe8-4d16-9aa-5bbeff84e7bc",
+          "type": "VIDEO_CLIP",
+          "startOffSet": 0,
+          "duration": 10000,
+          "endOffSet": 4000,
+          "coordinates": {
+            "x": 960,
+            "y": 540,
+            "width": 720,
+            "height": 540
+          },
+          "sourceUrl": "https://pixijs.com/assets/video.mp4",
           "opacity": 1,
           "rotationAngle": 0,
           "crop": "FILL",
@@ -79,10 +125,10 @@
           "duration": 60000,
           "endOffSet": 60000,
           "coordinates": {
-            "x": 342.75,
-            "y": 60,
-            "width": 106.5,
-            "height": 60
+            "x": 1620,
+            "y": 250,
+            "width": 540,
+            "height": 420
           },
           "sourceUrl": "https://storage.googleapis.com/spr-qa6-cdn/DAM/66000000/f7fa8542-4ae2-4891-8a84-8b3a24dc99f7-148749600/Largerthan15mins.mp4",
           "opacity": 1,
@@ -102,14 +148,14 @@
           "duration": 60000,
           "endOffSet": 12651,
           "coordinates": {
-            "x": 213,
-            "y": 120,
-            "width": 213,
-            "height": 120
+            "x": 960,
+            "y": 540,
+            "width": 720,
+            "height": 360
           },
           "opacity": 1,
           "rotationAngle": 0,
-          "htmlContent": "<div style=\"width: 213px; height: 120px; word-break: break-word; overflow: hidden; display: flex; align-items: flex-start;; font-size: 14px; background-color: #00000000;\" data-entityid=\"text-layer-container\"><div style=\"width: 100%\"><p style=\"margin-bottom: 0px; margin-top: 0px; font-family: Abril Fatface; line-height: 1.2\"><span style=\"font-family: Ubuntu; color: rgb(255, 255, 254); font-size: 36px; letter-spacing: 10px\">The text and color</span></p></div></div>",
+          "htmlContent": "<div style=\"width: 720px; height: 360px; word-break: break-word; overflow: hidden; display: flex; align-items: flex-start;; font-size: 14px; background-color: #00000000;\" data-entityid=\"text-layer-container\"><div style=\"width: 100%\"><p style=\"margin-bottom: 0px; margin-top: 0px; font-family: Abril Fatface; line-height: 1.2\"><span style=\"font-family: Ubuntu; color: rgb(255, 255, 254); font-size: 36px; letter-spacing: 10px\">The text and color</span></p></div></div>",
           "verticalAlignment": "TOP",
           "placeholders": [],
           "backgroundColor": "#00000000",
@@ -119,9 +165,9 @@
     }
   ],
   "videoProperties": {
-    "duration": 60000,
+    "duration": 10000,
     "frameRate": 30,
-    "height": 240,
-    "width": 426
+    "height": 1080,
+    "width": 1920
   }
 }

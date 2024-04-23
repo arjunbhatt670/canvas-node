@@ -1,24 +1,13 @@
-import getConfig from "#root/utilities/getConfig";
-import {
-  TimeTracker,
-  getMediaMetaData,
-  handleProcessExit,
-  print,
-} from "#root/utilities/grains";
+import { TimeTracker, getMediaMetaData } from "#root/utilities/grains";
 import saveTextClipAssets from "./saveTextClipAssets";
 import initiateAndStream from "./initiateAndStream";
 import { cleanAllAssets } from "./utils";
 
-const createVideo = async (finalVideoPath: string) => {
+const createVideo = async (finalVideoPath: string, config: Media) => {
+  const totalTimeTracker = new TimeTracker();
   try {
-    const { downloadedData: config } = await getConfig("data60");
-    const totalTimeTracker = new TimeTracker();
-
-    handleProcessExit(() => {
-      cleanAllAssets();
-    });
-
     totalTimeTracker.start();
+
     await saveTextClipAssets(config);
 
     await initiateAndStream(
@@ -27,11 +16,19 @@ const createVideo = async (finalVideoPath: string) => {
       config.videoProperties.duration,
       finalVideoPath
     );
-    totalTimeTracker.log("Total Time");
 
     getMediaMetaData(finalVideoPath).then((meta) => console.log(meta));
-  } catch (err) {
-    console.log(err);
+  } finally {
+    const timeTracker = new TimeTracker();
+    timeTracker.start();
+
+    await cleanAllAssets();
+
+    if (global.stats) global.stats.fileSystemCleanup = timeTracker.now();
+    timeTracker.log("File system cleanup done");
+
+    if (global.stats) global.stats.total = totalTimeTracker.now();
+    totalTimeTracker.log("Total Time");
   }
 };
 

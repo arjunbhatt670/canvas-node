@@ -1,0 +1,31 @@
+ffmpeg version 7.0 Copyright (c) 2000-2024 the FFmpeg developers
+  built with Apple clang version 15.0.0 (clang-1500.3.9.4)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.0 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libopenvino --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      59.  8.100 / 59.  8.100
+  libavcodec     61.  3.100 / 61.  3.100
+  libavformat    61.  1.100 / 61.  1.100
+  libavdevice    61.  1.100 / 61.  1.100
+  libavfilter    10.  1.100 / 10.  1.100
+  libswscale      8.  1.100 /  8.  1.100
+  libswresample   5.  1.100 /  5.  1.100
+  libpostproc    58.  1.100 / 58.  1.100
+Input #0, image2, from '/Users/arjun.bhatt/Downloads/sandbox/assets/ab96b4794e-f9b3-4560-961e-a9950cf14376.jpg':
+  Duration: 00:00:00.04, start: 0.000000, bitrate: 152756 kb/s
+  Stream #0:0: Video: mjpeg (Progressive), yuvj420p(pc, bt470bg/unknown/unknown), 4000x2666 [SAR 72:72 DAR 2000:1333], 25 fps, 25 tbr, 25 tbn
+Stream mapping:
+  Stream #0:0 -> #0:0 (mjpeg (native) -> mjpeg (native))
+Press [q] to stop, [?] for help
+[swscaler @ 0x118018000] deprecated pixel format used, make sure you did set range correctly
+[swscaler @ 0x158008000] deprecated pixel format used, make sure you did set range correctly
+    Last message repeated 1 times
+[swscaler @ 0x170008000] deprecated pixel format used, make sure you did set range correctly
+Output #0, image2, to '/Users/arjun.bhatt/Downloads/sandbox/intermediates/imageAssets/ab96b4794e-f9b3-4560-961e-a9950cf14376.jpeg':
+  Metadata:
+    encoder         : Lavf61.1.100
+  Stream #0:0: Video: mjpeg, yuvj420p(pc, progressive), 640x360 [SAR 1125:1333 DAR 2000:1333], q=2-31, 200 kb/s, 25 fps, 25 tbn
+      Metadata:
+        encoder         : Lavc61.3.100 mjpeg
+      Side data:
+        cpb: bitrate max/min/avg: 0/0/200000 buffer size: 0 vbv_delay: N/A
+[out#0/image2 @ 0x14760f930] video:18KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=    1 fps=0.0 q=3.6 Lsize=N/A time=00:00:00.04 bitrate=N/A speed=0.503x    

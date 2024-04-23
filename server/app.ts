@@ -112,7 +112,7 @@ app.get("/video-puppeteer", express.json(), async (req, res) => {
 
 app.get("/video", express.json(), async (req, res) => {
   const path = `${finalsPath}/output_pixi_server.mp4`;
-  await createVideo(path);
+  await createVideo(path, {} as unknown as Media);
   res.json({ ok: true });
 });
 
