@@ -1,8 +1,16 @@
 import { spawn } from "child_process";
+import { type Page } from "puppeteer";
 
 import { rootPath } from "#root/path";
+import saveTextClipAssets from "./saveTextClipAssets";
 
-export default function spawnCluster(config: Media, finalPath: string) {
+export default async function spawnCluster(
+  config: Media,
+  finalPath: string,
+  puppeteerPage: Page
+) {
+  await saveTextClipAssets(config, puppeteerPage);
+
   return new Promise<void>((resolve, reject) => {
     spawn(`ts-node ${rootPath}/video-generator/spawnClusterRun.ts`, [], {
       shell: true,

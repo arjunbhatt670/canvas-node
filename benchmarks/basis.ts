@@ -1,3 +1,4 @@
+import { getCustomVideoId } from "#root/utilities/grains";
 import { Row } from ".";
 
 export default function getDynamicConfig({
@@ -176,6 +177,7 @@ export default function getDynamicConfig({
       frameRate: fps,
       height: resolution[1],
       width: resolution[0],
+      id: getCustomVideoId(time, resolution, fps),
     },
   };
 }

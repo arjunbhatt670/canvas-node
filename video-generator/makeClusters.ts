@@ -3,6 +3,7 @@ import cluster from "cluster";
 import { TimeTracker, print } from "#root/utilities/grains";
 import { videoSegmentsPath } from "#root/path";
 import initiateAndStream from "./initiateAndStream";
+import { getVideoSegmentPath } from "./utils";
 
 export default async function makeClusters() {
   if (!cluster.isPrimary) {
@@ -14,12 +15,17 @@ export default async function makeClusters() {
 
     print(`Worker with id ${process.pid} started`);
 
+    const config = JSON.parse(process.env.mediaConfig!) as Media;
+
     timeTracker.start();
     await initiateAndStream(
-      JSON.parse(process.env.mediaConfig!) as Media,
+      config,
       Number(process.env.start),
       Number(process.env.duration),
-      `${videoSegmentsPath}/segment${Number(process.env.start)}.mp4`
+      getVideoSegmentPath(
+        process.env.start!,
+        `${videoSegmentsPath}/${config.videoProperties.id}`
+      )
     );
     cluster.worker?.send({ total: timeTracker.now(), stats: global.stats });
 

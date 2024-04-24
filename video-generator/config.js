@@ -1,3 +1,4 @@
 module.exports = {
-    imgType: 'jpeg'
+    imgType: 'jpeg',
+    finalVideoType: 'mp4'
 }

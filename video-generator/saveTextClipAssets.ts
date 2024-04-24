@@ -1,11 +1,14 @@
 import fs from "fs";
+import { type Page } from "puppeteer";
 
 import { rootPath } from "#root/path";
-import Puppeteer from "#root/puppeteer/index";
 import { TimeTracker } from "#root/utilities/grains";
 import { getTextAssetPath } from "./utils";
 
-export default async function saveTextClipAssets(config: Media) {
+export default async function saveTextClipAssets(
+  config: Media,
+  puppeteerPage: Page
+) {
   const timeTracker = new TimeTracker();
 
   const textClips = config.tracks
@@ -14,26 +17,20 @@ export default async function saveTextClipAssets(config: Media) {
 
   if (textClips.length) {
     timeTracker.start();
-    const puppeteer = new Puppeteer();
-    const page = await puppeteer.init();
-    if (global.stats) global.stats.puppeteerInit = timeTracker.now();
-    timeTracker.log("\n\nPuppeteer loaded");
 
-    timeTracker.start();
-
-    await page.addStyleTag({
+    await puppeteerPage.addStyleTag({
       url: `http://localhost:8000/roboto.css`,
     });
-    await page.addStyleTag({
+    await puppeteerPage.addStyleTag({
       path: `${rootPath}/utilities/reset.css`,
     });
-    await page.addScriptTag({
+    await puppeteerPage.addScriptTag({
       path: `${rootPath}/utilities/html2Image.js`,
     });
 
     await Promise.all(
       textClips.map(async (clip) => {
-        const dataUrl = await page.evaluate(
+        const dataUrl = await puppeteerPage.evaluate(
           function (htmlString, w, h) {
             document.body.innerHTML = htmlString;
 
@@ -48,7 +45,7 @@ export default async function saveTextClipAssets(config: Media) {
           clip.coordinates.height
         );
 
-        const path = getTextAssetPath(clip.id);
+        const path = getTextAssetPath(clip.id, config.videoProperties.id);
         fs.writeFileSync(
           path,
           Buffer.from(dataUrl.split("base64,")[1], "base64url")
@@ -58,7 +55,5 @@ export default async function saveTextClipAssets(config: Media) {
 
     if (global.stats) global.stats.processText = timeTracker.now();
     timeTracker.log("Text snapshots extracted to file system");
-
-    puppeteer.exit();
   }
 }

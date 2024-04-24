@@ -84,7 +84,7 @@ export const loop = async (
             frame: currentFrame - clipStartFrame,
             format: imgType,
             clipName: clip.id,
-            dir: videoFramesPath,
+            dir: `${videoFramesPath}/${config.videoProperties.id}`,
           });
 
           const sprite = await createSprite(clip, videoFramePath);
@@ -98,7 +98,10 @@ export const loop = async (
           if (statics.has(clip.id)) {
             container.addChild(statics.get(clip.id)!);
           } else {
-            const sprite = await createSprite(clip, getShapeAssetPath(clip.id));
+            const sprite = await createSprite(
+              clip,
+              getShapeAssetPath(clip.id, config.videoProperties.id)
+            );
 
             statics.set(clip.id, sprite);
 
@@ -125,7 +128,10 @@ export const loop = async (
           if (statics.has(clip.id)) {
             container.addChild(statics.get(clip.id)!);
           } else {
-            const sprite = await createSprite(clip, getTextAssetPath(clip.id));
+            const sprite = await createSprite(
+              clip,
+              getTextAssetPath(clip.id, config.videoProperties.id)
+            );
             statics.set(clip.id, sprite);
 
             container.addChild(sprite);

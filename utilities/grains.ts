@@ -335,6 +335,12 @@ const handleProcessExit = (cb: Function) => {
   process.on("uncaughtException", exitHandler.bind(null, { exit: true }));
 };
 
+const getCustomVideoId = (
+  time: number,
+  resolution: [number, number],
+  fps: number
+) => `output_${time / 1000}s_${resolution.join("x")}_${fps}fps`;
+
 export {
   downloadResource,
   getFilesCountIn,
@@ -349,4 +355,5 @@ export {
   getMediaMetaData,
   writeFileIntoText,
   handleProcessExit,
+  getCustomVideoId,
 };

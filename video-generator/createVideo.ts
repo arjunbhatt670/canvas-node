@@ -1,15 +1,30 @@
+import fs from "fs";
+import { type Page } from "puppeteer";
+
 import { TimeTracker, getMediaMetaData } from "#root/utilities/grains";
 import saveTextClipAssets from "./saveTextClipAssets";
 import initiateAndStream from "./initiateAndStream";
 import { cleanAllAssets } from "./utils";
 import saveVideoClipFrames from "./saveVideoClipFrames";
+import { shapeAssetsPath, textAssetsPath, videoFramesPath } from "#root/path";
 
-const createVideo = async (finalVideoPath: string, config: Media) => {
+const createVideo = async (
+  finalVideoPath: string,
+  config: Media,
+  puppeteerPage?: Page
+) => {
   const totalTimeTracker = new TimeTracker();
   try {
     totalTimeTracker.start();
 
-    await saveTextClipAssets(config);
+    !fs.existsSync(`${shapeAssetsPath}/${config.videoProperties.id}`) &&
+      fs.mkdirSync(`${shapeAssetsPath}/${config.videoProperties.id}`);
+    !fs.existsSync(`${textAssetsPath}/${config.videoProperties.id}`) &&
+      fs.mkdirSync(`${textAssetsPath}/${config.videoProperties.id}`);
+    !fs.existsSync(`${videoFramesPath}/${config.videoProperties.id}`) &&
+      fs.mkdirSync(`${videoFramesPath}/${config.videoProperties.id}`);
+
+    puppeteerPage && (await saveTextClipAssets(config, puppeteerPage));
     await saveVideoClipFrames(config, {
       duration: config.videoProperties.duration,
       start: 0,
@@ -27,7 +42,7 @@ const createVideo = async (finalVideoPath: string, config: Media) => {
     const timeTracker = new TimeTracker();
     timeTracker.start();
 
-    await cleanAllAssets();
+    cleanAllAssets(config.videoProperties.id);
 
     if (global.stats) global.stats.fileSystemCleanup = timeTracker.now();
     timeTracker.log("File system cleanup done");

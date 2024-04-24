@@ -1,4 +1,4 @@
-import { downloadMedia, TimeTracker } from "./grains";
+import { downloadMedia, getCustomVideoId, TimeTracker } from "./grains";
 
 const apiURL = "http://localhost:8000";
 
@@ -11,6 +11,15 @@ export default async function getConfig(configName: string) {
 
   const downloadedData = await downloadMedia(data);
   timeTracker.log("Fetched media assets");
+
+  downloadedData.videoProperties.id = getCustomVideoId(
+    downloadedData.videoProperties.duration,
+    [
+      downloadedData.videoProperties.width,
+      downloadedData.videoProperties.height,
+    ],
+    downloadedData.videoProperties.frameRate
+  );
 
   return { data, downloadedData };
 }

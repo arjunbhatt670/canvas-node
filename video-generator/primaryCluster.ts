@@ -1,15 +1,11 @@
 import os from "os";
 import cluster from "cluster";
 import { exec } from "child_process";
+import { type Page } from "puppeteer";
 
 import saveTextClipAssets from "./saveTextClipAssets";
-import {
-  TimeTracker,
-  getMediaMetaData,
-  handleProcessExit,
-  print,
-} from "#root/utilities/grains";
-import { finalsPath, videoSegmentsPath } from "#root/path";
+import { TimeTracker, getMediaMetaData, print } from "#root/utilities/grains";
+import { videoSegmentsPath } from "#root/path";
 import mergeVideos from "./mergeVideos";
 import createVideo from "./createVideo";
 import { cleanAllAssets } from "./utils";
@@ -17,13 +13,14 @@ import saveVideoClipFrames from "./saveVideoClipFrames";
 
 export default async function primaryCluster(
   config: Media,
-  finalVideoPath: string
+  finalVideoPath: string,
+  puppeteerPage?: Page
 ) {
   if (cluster.isPrimary) {
     const totalCPUs = os.cpus().length;
 
     if (Math.ceil(config.videoProperties.duration / 1000) < totalCPUs) {
-      await createVideo(finalVideoPath, config);
+      await createVideo(finalVideoPath, config, puppeteerPage);
       return;
     }
 
@@ -33,9 +30,7 @@ export default async function primaryCluster(
     print(`Number of CPUs is ${totalCPUs}`);
     print(`Master ${process.pid} is running`);
 
-    exec(`rm -rf ${videoSegmentsPath}/*`);
-
-    await saveTextClipAssets(config);
+    puppeteerPage && (await saveTextClipAssets(config, puppeteerPage));
     await saveVideoClipFrames(config, {
       duration: config.videoProperties.duration,
       start: 0,
@@ -54,7 +49,10 @@ export default async function primaryCluster(
     cluster.on("disconnect", async () => {
       doneCount++;
       if (doneCount === totalCPUs) {
-        await mergeVideos(finalVideoPath);
+        await mergeVideos(
+          finalVideoPath,
+          `${videoSegmentsPath}/${config.videoProperties.id}`
+        );
 
         getMediaMetaData(finalVideoPath).then((meta) => console.log(meta));
 
@@ -62,7 +60,7 @@ export default async function primaryCluster(
 
         timeTracker.start();
 
-        await cleanAllAssets();
+        cleanAllAssets(config.videoProperties.id);
 
         if (global.stats) global.stats.fileSystemCleanup = timeTracker.now();
         timeTracker.log("File system cleanup done");

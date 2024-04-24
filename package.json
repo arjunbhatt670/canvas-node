@@ -12,8 +12,8 @@
     "video-puppeteer": "OUTPUT=finals/output_pup.mp4 node --inspect-brk=0.0.0.0:9339 --require ts-node/register puppeteer/run.ts",
     "create-audio": "OUTPUT=finals/output.mp3 ts-node audio-generator/index.ts",
     "merge-videos": "OUTPUT=finals/merge.mp4 ts-node video-generator/run-merge.ts",
-    "video-save-csv": "node  --require ts-node/register video-generator/makeCsvSingleThread.ts",
-    "video-save-csv-multi": "node  --require ts-node/register video-generator/makeCsvMultiThread.ts",
+    "video-save-csv": "THREAD_TYPE=single node --require ts-node/register video-generator/makeCsv.ts",
+    "video-save-csv-multi": "THREAD_TYPE=multi node  --require ts-node/register video-generator/makeCsv.ts",
     "spawn-cluster": "ts-node video-generator/spawnClusterRun.ts"
   },
   "author": "",

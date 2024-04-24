@@ -13,6 +13,8 @@ import {
 async function mergeVideosFfmpeg(videosTextFilePath: string, output: string) {
   const errorFile = `${finalsPath}/merge-errors.txt`;
 
+  console.log("outputoutput", output);
+
   return new Promise<void>((resolve, reject) => {
     const proc = spawn(
       ffmpegPath!,
@@ -43,13 +45,13 @@ async function mergeVideosFfmpeg(videosTextFilePath: string, output: string) {
   });
 }
 
-const mergeVideos = async (finalVideoPath: string) => {
+const mergeVideos = async (finalVideoPath: string, segmentsPath: string) => {
   const timeTracker = new TimeTracker();
 
   timeTracker.start();
 
   const listFilePath = `${finalsPath}/video_segments.txt`;
-  writeFileIntoText(videoSegmentsPath, listFilePath);
+  writeFileIntoText(segmentsPath, listFilePath);
 
   await mergeVideosFfmpeg(listFilePath, finalVideoPath);
 

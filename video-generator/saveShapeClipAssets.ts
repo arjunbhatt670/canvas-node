@@ -23,7 +23,7 @@ export default async function saveShapeClipAssets(
   timeTracker.start();
   await Promise.all(
     shapeClips.map(async (clip) => {
-      const path = getShapeAssetPath(clip.id);
+      const path = getShapeAssetPath(clip.id, config.videoProperties.id);
 
       if (clip.shapeInfo && !fs.existsSync(path)) {
         const buffer = Buffer.from(

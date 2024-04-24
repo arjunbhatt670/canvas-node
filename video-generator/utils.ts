@@ -1,14 +1,13 @@
 import { exec } from "child_process";
 
 import {
-  imageAssetsPath,
   shapeAssetsPath,
   textAssetsPath,
-  tmpDir,
   videoFramesPath,
+  videoSegmentsPath,
 } from "#root/path";
 import video2Frame from "#root/utilities/video2Frame";
-import { imgType } from "./config";
+import { finalVideoType, imgType } from "./config";
 
 const extractVideoClipFrames = async (
   clip: DataClip,
@@ -55,9 +54,10 @@ function getVisibleObjects(config: Media, timeInstance: number): DataClip[] {
     );
 }
 
-const getShapeAssetPath = (id: string) => `${shapeAssetsPath}/${id}.${imgType}`;
-const getTextAssetPath = (id: string) => `${textAssetsPath}/${id}.${imgType}`;
-const getImageAssetPath = (id: string) => `${imageAssetsPath}/${id}.${imgType}`;
+const getShapeAssetPath = (id: string, dir: string) =>
+  `${shapeAssetsPath}/${dir}/${id}.${imgType}`;
+const getTextAssetPath = (id: string, dir: string) =>
+  `${textAssetsPath}/${dir}/${id}.${imgType}`;
 
 const getVideoClipFramePath = ({
   frame,
@@ -72,6 +72,12 @@ const getVideoClipFramePath = ({
 }) => {
   return `${dir}/${clipName}_frame${frame ?? "%d"}.${format}`;
 };
+
+const getVideoSegmentPath = (id: string, dir: string) =>
+  `${dir}/segment_${id}.${finalVideoType}`;
+
+const getFinalVideoPath = (id: string, dir: string) =>
+  `${dir}/${id}.${finalVideoType}`;
 
 const getVideoClipFrameEndPoints = (
   clip: DataClip,
@@ -96,13 +102,25 @@ const getVideoClipFrameEndPoints = (
   };
 };
 
-const cleanAllAssets = () =>
-  new Promise((resolve) =>
-    exec(
-      `find ${videoFramesPath}/ ${textAssetsPath}/ ${shapeAssetsPath}/ ${imageAssetsPath}/ -name "*.${imgType}" -delete`,
-      resolve
-    )
-  );
+const cleanAllAssets = (subFolder: string = "*") =>
+  Promise.all([
+    new Promise((resolve) =>
+      exec(
+        `find ${videoFramesPath}/${subFolder} ${textAssetsPath}/${subFolder} ${shapeAssetsPath}/${subFolder} ${
+          subFolder !== "*" ? `-name "*.${imgType}"` : ""
+        } -delete`,
+        resolve
+      )
+    ),
+    new Promise((resolve) =>
+      exec(
+        `find ${videoSegmentsPath}/${subFolder} ${
+          subFolder !== "*" ? `-name "*.${finalVideoType}"` : ""
+        } -delete`,
+        resolve
+      )
+    ),
+  ]);
 
 export {
   extractVideoClipFrames,
@@ -112,5 +130,6 @@ export {
   getVideoClipFramePath,
   cleanAllAssets,
   getVideoClipFrameEndPoints,
-  getImageAssetPath,
+  getVideoSegmentPath,
+  getFinalVideoPath,
 };

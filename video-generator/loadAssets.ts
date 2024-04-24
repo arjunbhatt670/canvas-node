@@ -34,7 +34,7 @@ export default async function loadAssets(
   timeTracker.start();
   await Promise.all(
     shapeClips.map(async (clip) => {
-      const path = getShapeAssetPath(clip.id);
+      const path = getShapeAssetPath(clip.id, config.videoProperties.id);
 
       if (clip.shapeInfo && !fs.existsSync(path)) {
         const buffer = Buffer.from(
@@ -67,7 +67,7 @@ export default async function loadAssets(
   timeTracker.start();
   await Promise.all(
     imageClips.map(async (clip) => {
-      const path = getImageAssetPath(clip.id);
+      const path = getImageAssetPath(clip.id, config.videoProperties.id);
 
       if (!fs.existsSync(path)) {
         await imageResize(clip.sourceUrl!, path, {
@@ -94,7 +94,7 @@ export default async function loadAssets(
     .flat(1);
 
   textClips.map((clip) => {
-    const path = getTextAssetPath(clip.id);
+    const path = getTextAssetPath(clip.id, config.videoProperties.id);
     assets.push(path);
   });
 

@@ -26,7 +26,7 @@ export default async function saveVideoClipFrames(
   await Promise.all(
     videoClips.map((clip) => {
       const frameOutputPath = getVideoClipFramePath({
-        dir: videoFramesPath,
+        dir: `${videoFramesPath}/${config.videoProperties.id}`,
         format: imgType,
         clipName: clip.id,
       });

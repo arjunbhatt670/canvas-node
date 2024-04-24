@@ -8,6 +8,7 @@ declare interface Media {
     frameRate: number;
     height: number;
     width: number;
+    id: string;
   };
 }
 
