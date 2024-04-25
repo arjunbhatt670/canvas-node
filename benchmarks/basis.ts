@@ -129,7 +129,7 @@ export default function getDynamicConfig({
             rotationAngle: 0,
             htmlContent: `<div style="width: ${resolution[0] / 2}px; height: ${
               resolution[1] / 2
-            }px; word-break: break-word; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 14px; background-color: #00000000;" data-entityid="text-layer-container"><div style="width: 100%"><p style="margin-bottom: 0px; margin-top: 0px; font-family: Abril Fatface; line-height: 1.2"><span style="font-family: Ubuntu; display: block; text-align: center; width: 100%; color: rgb(255, 255, 254); font-size: ${fontSize}px; letter-spacing: 10px">The text and color</span></p></div></div>`,
+            }px; word-break: break-word; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 14px; background-color: #00000000;" data-entityid="text-layer-container"><div style="width: 100%"><p style="margin-bottom: 0px; margin-top: 0px; font-family: Abril Fatface; line-height: 1.2"><span style="font-family: Roboto; display: block; text-align: center; width: 100%; color: rgb(255, 255, 254); font-size: ${fontSize}px; letter-spacing: 10px">The text and color</span></p></div></div>`,
             verticalAlignment: "TOP",
             placeholders: [],
             backgroundColor: "#00000000",

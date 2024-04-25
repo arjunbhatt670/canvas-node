@@ -1,54 +1,49 @@
-ffmpeg version 6.0 Copyright (c) 2000-2023 the FFmpeg developers
-  built with Apple clang version 13.1.6 (clang-1316.0.21.2.5)
-  configuration: --prefix=/Volumes/tempdisk/sw --extra-cflags=-fno-stack-check --arch=arm64 --cc=/usr/bin/clang --enable-gpl --enable-libvmaf --enable-libbluray --enable-libopenjpeg --enable-libopus --enable-libmp3lame --enable-libx264 --enable-libx265 --enable-libvpx --enable-libwebp --enable-libass --enable-libfreetype --enable-fontconfig --enable-libtheora --enable-libvorbis --enable-libsnappy --enable-libaom --enable-libvidstab --enable-libzimg --enable-libsvtav1 --enable-libkvazaar --enable-version3 --pkg-config-flags=--static --enable-ffplay --enable-postproc --enable-nonfree --enable-neon --enable-runtime-cpudetect --disable-indev=qtkit --disable-indev=x11grab_xcb
-  libavutil      58.  2.100 / 58.  2.100
-  libavcodec     60.  3.100 / 60.  3.100
-  libavformat    60.  3.100 / 60.  3.100
-  libavdevice    60.  1.100 / 60.  1.100
-  libavfilter     9.  3.100 /  9.  3.100
-  libswscale      7.  1.100 /  7.  1.100
-  libswresample   4. 10.100 /  4. 10.100
-  libpostproc    57.  1.100 / 57.  1.100
-Input #0, mov,mp4,m4a,3gp,3g2,mj2, from '/Users/arjun.bhatt/Downloads/sandbox/assets/20338a9f-430a-42f3-b319-bb65997f984a.mp4':
+ffmpeg version 7.0 Copyright (c) 2000-2024 the FFmpeg developers
+  built with Apple clang version 15.0.0 (clang-1500.3.9.4)
+  configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/7.0 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags='-Wl,-ld_classic' --enable-ffplay --enable-gnutls --enable-gpl --enable-libaom --enable-libaribb24 --enable-libbluray --enable-libdav1d --enable-libharfbuzz --enable-libjxl --enable-libmp3lame --enable-libopus --enable-librav1e --enable-librist --enable-librubberband --enable-libsnappy --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtesseract --enable-libtheora --enable-libvidstab --enable-libvmaf --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-lzma --enable-libfontconfig --enable-libfreetype --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenjpeg --enable-libopenvino --enable-libspeex --enable-libsoxr --enable-libzmq --enable-libzimg --disable-libjack --disable-indev=jack --enable-videotoolbox --enable-audiotoolbox --enable-neon
+  libavutil      59.  8.100 / 59.  8.100
+  libavcodec     61.  3.100 / 61.  3.100
+  libavformat    61.  1.100 / 61.  1.100
+  libavdevice    61.  1.100 / 61.  1.100
+  libavfilter    10.  1.100 / 10.  1.100
+  libswscale      8.  1.100 /  8.  1.100
+  libswresample   5.  1.100 /  5.  1.100
+  libpostproc    58.  1.100 / 58.  1.100
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from '/Users/arjun.bhatt/Downloads/sandbox/assets/ab106b4794e-f9b3-4560-961e-a9950cf14376.mp4':
   Metadata:
-    major_brand     : mp42
-    minor_version   : 0
-    compatible_brands: isommp42
-    creation_time   : 2023-05-16T16:00:30.000000Z
-  Duration: 00:15:09.01, start: 0.000000, bitrate: 140 kb/s
-  Stream #0:0[0x1](und): Video: h264 (Main) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 640x360 [SAR 1:1 DAR 16:9], 10 kb/s, 6 fps, 6 tbr, 12288 tbn (default)
-    Metadata:
-      creation_time   : 2023-05-16T16:00:30.000000Z
-      handler_name    : ISO Media file produced by Google Inc. Created on: 05/16/2023.
-      vendor_id       : [0][0][0][0]
-  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 127 kb/s (default)
-    Metadata:
-      creation_time   : 2023-05-16T16:00:30.000000Z
-      handler_name    : ISO Media file prod[swscaler @ 0x118a78000] deprecated pixel format used, make sure you did set range correctly
-[swscaler @ 0x158998000] deprecated pixel format used, make sure you did set range correctly
-    Last message repeated 1 times
-[swscaler @ 0x138118000] deprecated pixel format used, make sure you did set range correctly
-Output #0, image2, to '/Users/arjun.bhatt/Downloads/sandbox/intermediates/videoFrames/output_60s_640x360_30fps/ab206b4794e-f9b3-4560-961e-a9950cf14376_frame%d.jpeg':
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : Lavf61.1.100
+  Duration: 00:02:17.07, start: 0.000000, bitrate: 2367 kb/s
+  Stream #0:0[0x1](eng): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 1920x1080 [SAR 1:1 DAR 16:9], 2364 kb/s, 29.97 fps, 29.97 tbr, 30k tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc61.3.100 libx264
+Multiple -filter/-af/-vf options specified for stream 0, only the last option '-filter:v scale=256:144' will be used.
+Stream mapping:
+  Stream #0:0 -> #0:0 (h264 (native) -> mjpeg (native))
+Press [q] to stop, [?] for help
+[swscaler @ 0x158b60000] deprecated [swscaler @ 0x150bd0000] deprecated pixel format used, maOutput #0, image2, to '/Users/arjun.Output #0, image2, to '/Users/arjun.bhatt/Downloads/sandbox/intermediates/videoFrames/output_10s_640x360_30fps/ab206b4794e-f9b3-4560-961e-a9950cf14376_frame%d.jpeg':
   Metadata:
     major_brand     : dash
     minor_version   : 0
     compatible_brands: iso6avc1mp41
-    encoder         : Lavf60.3.100
-  Stream #0:0(und): Video: mjpeg, yuvj420p(pc, bt709, progressive), 256x144 [SAR 1:1 DAR 16:9], q=2-31, 200 kb/s, 30 fps, 30 tbn (default)
-    Metadata:
-      creation_time   : 2024-02-24T00:28:51.000000Z
-      handler_name    : ISO Media file produced by Google Inc.
-      vendor_id       : [0][0][0][0]
-      encoder         : Lavc60.3.100 mjpeg
-    Side data:
-      cpb: bitrate max/min/avg: 0/0/200000 buffer size: 0 vbv_delay: N/A
-frame=    0 fps=0.0 q=0.0 size=       0kB time=-577frame=  102 fps=0.0 q=1.0 size=N/A time=00:00:03.frame=  100 fps=0.0 q=1.0 size=frame=  200 fps=194 q=1.0 size=N/A time=00:00:06.90 bitrate=N/Aframe=  207 fps=1frame=  303 fps=198 q=1.0 size=N/A time=00:00:10.33 bitrate=N/A speed=6.74x  fraframe=  407 fps=200 q=1.0 size=N/A time=00:00:13.70 bitrate=N/A speed=6.72x    frame=  505 fps=199 q=1.0 size=N/A time=00:00:17.03 bitrate=N/A dup=1 drop=0 speed= 6.7x    frame=  587 fps=193 q=1.0 size=N/A time=00:00:19.80 bitrate=N/A dup=1 drop=0 speed= 6.5x    frame=  671 fps=189 q=1.0 size=N/A time=00:00:22.60 bitrate=N/A dup=1 drop=0 speed=6.37x    frame=  762 fps=188 q=1.0 size=N/A time=00:00:25.63 bitrate=N/A dup=1 drop=0 speed=6.33x    frame=  827 fps=182 q=1.0 size=N/A time=00:00:27.80 bitrate=N/A dup=1 drop=0 speed=6.11x    frame=  919 fps=182 q=1.0 size=N/A time=00:00:30.86 bitrate=N/A dup=1 drop=0 speed= 6.1x    frame= 1010 fps=182 q=1.0 size=N/A time=00:00:33.90 bitrate=N/A dup=1 drop=0 speed= 6.1x    frame= 1096 fps=181 q=1.0 size=N/A time=00:00:36.76 bitrate=N/A dup=1 drop=0 speed=6.06x    frame= 1191 fps=181 q=1.0 size=N/A time=00:00:39.93 bitrate=N/A dup=1 drop=0 speed=6.08x    frame= 1278 fps=181 q=1.0 size=N/A time=00:00:42.83 bitrate=N/A dup=1 drop=0 speed=6.06x    frame= 1351 fps=178 q=1.0 size=N/A time=00:00:45.26 bitrate=N/A dup=1 drop=0 speed=5.98x    frame= 1426 fps=177 q=1.0 size=N/A time=00:00:47.76 bitrate=N/A dup=1 drop=0 speed=5.92x    frame= 1489 fps=173 q=1.0 size=N/A time=00:00:49.83 bitrate=N/A dup=2 drop=0 speed= 5.8x    frame= 1583 fps=174 q=1.0 size=N/A time=00:00:53.00 bitrate=N/A dup=2 drop=0 speed=5.83x    frame= 1687 fps=176 q=1.0 size=N/A time=00:00:56.46 bitrate=N/A dup=2 drop=0 speed=5.89x    frame= 1767 fps=175 q=1.0 size=N/A time=00:00:59.13 bitrate=N/A dup=2 drop=0 speed=5.86x    frame= 1800 fps=176 q=1.0 Lsize=N/A time=00:00:59.96 bitrate=N/A dup=2 drop=0 speed=5.86x    
-video:25761kB audio:0kB subtitle:0kB otherframe= 1800 fps=176 q=1.0 Lsize=N/A time=00:00:59.96 bitrate=N/A dup=300 drop=0 speed=5.86x    
-video:24884kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
-bench: utime=8.110s stime=0.686s rtime=10.228s
-bench: maxrss=141869056kB
-frame= 1800 fps=190 q=1.0 Lsize=N/A time=00:00:59.96 bitrate=N/A dup=1440 drop=0 speed=6.31x    
-video:7766kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
-bench: utime=0.626s stime=0.441s rtime=9.498s
-bench: maxrss=53641216kB
-
+    encoder         : Lavf61.1.100
+  Stream #0:0(und): Video: mjpeg, yuvj420p(pc, unknown/bt709/bt709, progressive), 256x144 [SAR 1:1 DAR 16:9], q=2-31, 200 kb/s, 30 fps, 30 tbn (default)
+      Metadata:
+        creation_time   : 2024-02-24T00:28:51.000000Z
+        handler_name    : ISO Media file produced by Google Inc.
+        vendor_id       : [0][0][0][0]
+        encoder         : Lframe=  215 fps=0.0 q=1.0 size=N/A time=00:00:07.43 bitrate=N/A speed=14.8x    [out#0/image2 @ 0x149012530] video:3361KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=  300 fps=0.0 q=1.0 Lsize=N/A time=00:00:10.00 bitrate=N/A speed=15.3x    
+bench: utime=1.718s stime=0.123s rtime=0.655s
+bench: maxrss=167280640KiB
+e=N/A time=00:00:10.00 bitrate=N/A dup=50 drop=0 speed=15.3x    
+bench: utime=1.337s stime=0.109s rtime=0.654s
+bench: maxrss=167346176KiB
+A dup=192 drop=0 speed=14.5x    [out#0/image2 @ 0x153e10e60] video:1339KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+frame=  300 fps=0.0 q=1.0 Lsize=N/A time=00:00:10.00 bitrate=N/A dup=240 drop=0 speed=15.3x    
+bench: utime=0.114s stime=0.075s rtime=0.653s
+bench: maxrss=67846144KiB

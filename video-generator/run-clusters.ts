@@ -20,7 +20,7 @@ import { cleanAllAssets } from "./utils";
       throw new ReferenceError("Please provide OUTPUT env variable");
     }
 
-    const { downloadedData: config } = await getConfig("video");
+    const { downloadedData: config } = await getConfig("data60");
 
     handleProcessExit(() => {
       cleanAllAssets();

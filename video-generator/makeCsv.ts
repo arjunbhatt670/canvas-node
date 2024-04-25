@@ -74,12 +74,12 @@ const handleRow = async (row: Row, page: Page) => {
 
 (async () => {
   const rows = createStatsMeta(
-    [60000],
+    [10000],
     [30],
     [
       [640, 360],
-      [854, 480],
-      [1280, 720],
+      // [854, 480],
+      // [1920, 1080],
     ]
   );
 

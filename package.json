@@ -8,7 +8,7 @@
     "dev": "nodemon server/app.ts",
     "debug": "nodemon --exec \"node  --inspect-brk=0.0.0.0:9339 --require ts-node/register --watch server/app.ts\"",
     "video-single-thread": "OUTPUT=finals/output_pixi_vt.mp4 node  --require ts-node/register video-generator/run.ts",
-    "video-clusters": "OUTPUT=finals/merge.mp4 node  --require ts-node/register video-generator/run-clusters.ts",
+    "video-clusters": "NODE_OPTIONS=\"-r ts-node/register --no-warnings\" OUTPUT=finals/merge.mp4 node video-generator/run-clusters.ts",
     "video-puppeteer": "OUTPUT=finals/output_pup.mp4 node --inspect-brk=0.0.0.0:9339 --require ts-node/register puppeteer/run.ts",
     "create-audio": "OUTPUT=finals/output.mp3 ts-node audio-generator/index.ts",
     "merge-videos": "OUTPUT=finals/merge.mp4 ts-node video-generator/run-merge.ts",

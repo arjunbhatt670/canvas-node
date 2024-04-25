@@ -18,15 +18,29 @@ export default async function saveTextClipAssets(
   if (textClips.length) {
     timeTracker.start();
 
-    await puppeteerPage.addStyleTag({
-      url: `http://localhost:8000/roboto.css`,
-    });
-    await puppeteerPage.addStyleTag({
-      path: `${rootPath}/utilities/reset.css`,
-    });
-    await puppeteerPage.addScriptTag({
-      path: `${rootPath}/utilities/html2Image.js`,
-    });
+    await Promise.all([
+      puppeteerPage.addStyleTag({
+        content: `
+          @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+          /* add more fonts as needed */
+          `,
+      }),
+      puppeteerPage.addStyleTag({
+        content: `
+          html, body {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+          }
+        `,
+      }),
+      puppeteerPage.addScriptTag({
+        path: `${rootPath}/utilities/html2Image.js`,
+      }),
+    ]);
 
     await Promise.all(
       textClips.map(async (clip) => {

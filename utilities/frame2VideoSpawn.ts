@@ -24,7 +24,7 @@ export default function frame2VideoSpawn(
       `-preset ultrafast`,
       "-pix_fmt yuv420p",
       "-benchmark",
-      "-q:v 65", // Variable bit rate (for codec videotoolbox)
+      "-q:v 65", // Constant quality factor (for codec videotoolbox)
       // "-crf 15", // Constant rate factor (for codec libx264)
     ];
 

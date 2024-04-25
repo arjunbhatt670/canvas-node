@@ -1,7 +1,6 @@
 import { Readable } from "stream";
 import frame2VideoSpawn from "#root/utilities/frame2VideoSpawn";
 import { loop } from "./frameLoop";
-import saveShapeClipAssets from "./saveShapeClipAssets";
 
 export default async function initiateAndStream(
   config: Media,
@@ -19,7 +18,6 @@ export default async function initiateAndStream(
   });
 
   // await saveVideoClipFrames(config, limit);
-  await saveShapeClipAssets(config, limit);
 
   await Promise.all([
     frame2VideoSpawn(

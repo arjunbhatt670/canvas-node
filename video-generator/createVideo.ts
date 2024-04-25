@@ -24,11 +24,13 @@ const createVideo = async (
     !fs.existsSync(`${videoFramesPath}/${config.videoProperties.id}`) &&
       fs.mkdirSync(`${videoFramesPath}/${config.videoProperties.id}`);
 
-    puppeteerPage && (await saveTextClipAssets(config, puppeteerPage));
-    await saveVideoClipFrames(config, {
-      duration: config.videoProperties.duration,
-      start: 0,
-    });
+    await Promise.all([
+      puppeteerPage && saveTextClipAssets(config, puppeteerPage),
+      saveVideoClipFrames(config, {
+        duration: config.videoProperties.duration,
+        start: 0,
+      }),
+    ]);
 
     await initiateAndStream(
       config,

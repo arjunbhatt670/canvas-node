@@ -1,9 +1,9 @@
 import PIXI, { type Sprite, type Texture } from "./pixi-node";
 import { type Readable } from "stream";
+import * as fastq from "fastq";
+import type { queueAsPromised } from "fastq";
 
 import {
-  getImageAssetPath,
-  getShapeAssetPath,
   getTextAssetPath,
   getVideoClipFramePath,
   getVisibleObjects,
@@ -12,13 +12,26 @@ import { TimeTracker, print } from "#root/utilities/grains";
 import { videoFramesPath } from "#root/path";
 import { imgType } from "./config";
 
-const createSprite = async (clip: DataClip, src: string) => {
-  const imgTexture = await PIXI.loadNodeTexture.load?.<Texture>(src, {})!;
+const getTextureFromSrc = async (src: string, clip: DataClip) => {
+  const texture = await PIXI.loadNodeTexture.load?.<Texture>(src, {})!;
 
-  imgTexture.orig.width = clip.coordinates.width;
-  imgTexture.orig.height = clip.coordinates.height;
+  texture.orig.width = clip.coordinates.width;
+  texture.orig.height = clip.coordinates.height;
 
-  const sprite = PIXI.Sprite.from(imgTexture);
+  return texture;
+};
+
+const getTextureFromBase64 = async (base64: string, clip: DataClip) => {
+  const texture = await PIXI.loadNodeBase64.load?.<Texture>(base64, {})!;
+
+  texture.orig.width = clip.coordinates.width;
+  texture.orig.height = clip.coordinates.height;
+
+  return texture;
+};
+
+const getSprite = (texture: Texture, clip: DataClip) => {
+  const sprite = PIXI.Sprite.from(texture);
   sprite.pivot.set(clip.coordinates.width / 2, clip.coordinates.height / 2);
   sprite.width = clip.coordinates.width;
   sprite.height = clip.coordinates.height;
@@ -55,6 +68,7 @@ export const loop = async (
     height: config.videoProperties.height,
     antialias: true,
     preserveDrawingBuffer: true,
+    clearBeforeRender: true,
   });
   if (global.stats) global.stats.pixiInit = timeTracker.now();
   timeTracker.log("Renderer detected");
@@ -87,7 +101,9 @@ export const loop = async (
             dir: `${videoFramesPath}/${config.videoProperties.id}`,
           });
 
-          const sprite = await createSprite(clip, videoFramePath);
+          const texture = await getTextureFromSrc(videoFramePath, clip);
+
+          const sprite = getSprite(texture, clip);
 
           container.addChild(sprite);
 
@@ -98,10 +114,12 @@ export const loop = async (
           if (statics.has(clip.id)) {
             container.addChild(statics.get(clip.id)!);
           } else {
-            const sprite = await createSprite(
-              clip,
-              getShapeAssetPath(clip.id, config.videoProperties.id)
+            const texture = await getTextureFromBase64(
+              clip.shapeInfo?.shapeMediaUrl!,
+              clip
             );
+
+            const sprite = getSprite(texture, clip);
 
             statics.set(clip.id, sprite);
 
@@ -115,7 +133,10 @@ export const loop = async (
           if (statics.has(clip.id)) {
             container.addChild(statics.get(clip.id)!);
           } else {
-            const sprite = await createSprite(clip, clip.sourceUrl!);
+            const texture = await getTextureFromSrc(clip.sourceUrl!, clip);
+
+            const sprite = getSprite(texture, clip);
+
             statics.set(clip.id, sprite);
 
             container.addChild(sprite);
@@ -128,10 +149,13 @@ export const loop = async (
           if (statics.has(clip.id)) {
             container.addChild(statics.get(clip.id)!);
           } else {
-            const sprite = await createSprite(
-              clip,
-              getTextAssetPath(clip.id, config.videoProperties.id)
+            const texture = await getTextureFromSrc(
+              getTextAssetPath(clip.id, config.videoProperties.id),
+              clip
             );
+
+            const sprite = getSprite(texture, clip);
+
             statics.set(clip.id, sprite);
 
             container.addChild(sprite);
@@ -151,7 +175,6 @@ export const loop = async (
       .toDataURL?.("image/jpeg", 1)
       ?.split(";base64,")[1]!;
     const bufferData = Buffer.from(baseData, "base64");
-    renderer.clear();
     time.extract += timeTracker.now();
 
     // fs.writeFileSync(`${rootPath}/pixiFrames/frame_${currentFrame}.jpeg`, baseData.split(';base64,').pop(), {
@@ -161,30 +184,44 @@ export const loop = async (
     return bufferData;
   }
 
-  async function makeDraw(frame: number) {
-    if (frame > endFrame) return;
+  // async function makeDraw(frame: number) {
+  //   if (frame > endFrame) return;
 
-    const data = await draw(frame);
+  //   const data = await draw(frame);
 
-    await new Promise<void>((resolve) => {
-      frameStream.once("data", async () => {
-        time.streamed += timeTracker.now();
+  //   await new Promise<void>((resolve) => {
+  //     frameStream.once("data", async () => {
+  //       time.streamed += timeTracker.now();
 
-        await makeDraw(++frame);
+  //       await makeDraw(++frame);
 
-        resolve();
-      });
+  //       resolve();
+  //     });
 
-      timeTracker.start();
-      frameStream.push(data);
-    });
-  }
+  //     timeTracker.start();
+  //     frameStream.push(data);
+  //   });
+  // }
+  // await makeDraw(startFrame);
 
   const loopTimeTracker = new TimeTracker();
   loopTimeTracker.start();
 
   try {
-    await makeDraw(startFrame);
+    async function asyncWorker(frame: number) {
+      const buffer = await draw(frame);
+      frameStream.push(buffer);
+    }
+    const q: queueAsPromised<number> = fastq.promise(asyncWorker, 1);
+
+    let frame = startFrame;
+    while (frame <= endFrame) {
+      q.push(frame);
+      frame++;
+    }
+
+    await q.drained();
+    frameStream.push(null);
 
     if (global.stats) global.stats.drawCanvas = time.draw;
     if (global.stats) global.stats.extractCanvas = time.extract;
@@ -196,8 +233,6 @@ export const loop = async (
         time.draw
       } ms) (Extract - ${time.extract} ms) (Streamed - ${time.streamed} ms)`
     );
-
-    frameStream.push(null);
   } finally {
     renderer.destroy(true);
   }

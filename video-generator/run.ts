@@ -16,7 +16,7 @@ import { cleanAllAssets } from "./utils";
     cleanAllAssets();
   });
 
-  const { downloadedData: config } = await getConfig("video");
+  const { downloadedData: config } = await getConfig("data60");
 
   const timeTracker = new TimeTracker();
 

@@ -9,16 +9,20 @@ export default class Puppeteer {
       args: [
         "--enable-chrome-browser-cloud-management",
         "--disable-web-security",
+        "--no-sandbox",
+        "--no-zygote",
       ],
       debuggingPort: 9119,
       devtools: false,
+      ignoreHTTPSErrors: true,
     });
     const page = await this.browser.newPage();
+
     page.on("console", (message) => {
       const type = message.type();
-      if (["log", "info", "error"].includes(type)) {
-        console.log(`${type.substring(0, 3).toUpperCase()} ${message.text()}`);
-      }
+      console.log(
+        `PUPPETEER ${type.substring(0, 3).toUpperCase()} ${message.text()}`
+      );
     });
 
     return page;
