@@ -1,8 +1,4 @@
 {
   "verbose": true,
-  "watch": ["server/*"],
-  "execMap": {
-    "rb": "ruby",
-    "pde": "processing --sketch={{pwd}} --run"
-  }
+  "watch": ["build/**/*.js"]
 }
